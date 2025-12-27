@@ -137,26 +137,31 @@ const Dashboard = () => {
                 // 2. Fetch link via JSONP (Bypasses CORS for Apps Script)
                 console.log("Upload sent, fetching new link via JSONP...");
 
-                // Remove any old script tag
-                const oldScript = document.getElementById('drive-jsonp');
-                if (oldScript) oldScript.remove();
-
-                const script = document.createElement('script');
-                script.id = 'drive-jsonp';
-                // Define global callback
+                // Definition of a globally accessible callback is required for JSONP
                 window.handleDriveResponse = (result) => {
+                    console.log("JSONP Response received:", result);
                     if (result.status === 'success') {
                         setDriveLink(result.previewUrl);
                         alert("File uploaded and linked successfully!");
                     } else {
-                        alert("File uploaded but link retrieval failed. Try again in a moment.");
+                        console.error("Link retrieval failed:", result);
+                        alert("File uploaded but link retrieval failed. Please try again or check your Drive.");
                     }
                     setIsUploading(false);
-                    script.remove();
                 };
 
+                const script = document.createElement('script');
                 script.src = `${GOOGLE_SCRIPT_URL}?phone=${encodeURIComponent(selectedPatient.phone)}&callback=handleDriveResponse&t=${Date.now()}`;
+
+                script.onerror = () => {
+                    console.error("JSONP Script load error");
+                    setIsUploading(false);
+                    alert("Communication error with Google. Please try saving and refreshing.");
+                };
+
                 document.body.appendChild(script);
+                // Clean up script tag after execution
+                setTimeout(() => script.remove(), 10000);
             };
         } catch (err) {
             console.error("Upload Error:", err);
