@@ -12,6 +12,21 @@ import { format } from 'date-fns';
 // REPLACE THIS with your Google Apps Script Web App URL
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyK_DSjFavVCsE0DH49qxke-NVR8Nq_nFP3saZD86VKGIQ1TDPxIF3WTmwz995Oa46tGw/exec';
 
+// Helper for Google Drive Preview Links
+const formatDrivePreview = (url) => {
+    if (!url || !url.includes('drive.google.com')) return url;
+    // Handle various formats to ensure /preview
+    if (url.includes('/file/d/')) {
+        const fileId = url.split('/file/d/')[1].split('/')[0];
+        return `https://drive.google.com/file/d/${fileId}/preview`;
+    }
+    if (url.includes('id=')) {
+        const fileId = url.split('id=')[1].split('&')[0];
+        return `https://drive.google.com/file/d/${fileId}/preview`;
+    }
+    return url;
+};
+
 const Dashboard = () => {
     const [bookings, setBookings] = useState([]);
     const [selectedPatient, setSelectedPatient] = useState(null);
@@ -111,38 +126,41 @@ const Dashboard = () => {
                     phone: selectedPatient.phone
                 };
 
-                // 1. Upload the file (no-cors prevents reading response)
+                // 1. Upload via POST
+                console.log("Sending file to Drive bridge...");
                 await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
                     body: JSON.stringify(payload)
                 });
 
-                // 2. Wait 2 seconds for Drive to process, then FETCH the link via GET
-                console.log("Upload sent, waiting for Drive processing...");
-                setTimeout(async () => {
-                    try {
-                        const getUrl = `${GOOGLE_SCRIPT_URL}?phone=${encodeURIComponent(selectedPatient.phone)}`;
-                        const response = await fetch(getUrl);
-                        const result = await response.json();
+                // 2. Fetch link via JSONP (Bypasses CORS for Apps Script)
+                console.log("Upload sent, fetching new link via JSONP...");
 
-                        if (result.status === 'success') {
-                            setDriveLink(result.previewUrl);
-                            alert("File uploaded and linked successfully!");
-                        } else {
-                            alert("File uploaded, but could not retrieve preview link automatically. Please check your Drive.");
-                        }
-                    } catch (err) {
-                        console.error("GET link error:", err);
-                        alert("File uploaded, but there was an error showing the preview. Try 'Save Draft' and refresh.");
-                    } finally {
-                        setIsUploading(false);
+                // Remove any old script tag
+                const oldScript = document.getElementById('drive-jsonp');
+                if (oldScript) oldScript.remove();
+
+                const script = document.createElement('script');
+                script.id = 'drive-jsonp';
+                // Define global callback
+                window.handleDriveResponse = (result) => {
+                    if (result.status === 'success') {
+                        setDriveLink(result.previewUrl);
+                        alert("File uploaded and linked successfully!");
+                    } else {
+                        alert("File uploaded but link retrieval failed. Try again in a moment.");
                     }
-                }, 3000);
+                    setIsUploading(false);
+                    script.remove();
+                };
+
+                script.src = `${GOOGLE_SCRIPT_URL}?phone=${encodeURIComponent(selectedPatient.phone)}&callback=handleDriveResponse&t=${Date.now()}`;
+                document.body.appendChild(script);
             };
         } catch (err) {
-            console.error("Upload process error:", err);
-            alert("Upload failed: " + err.message);
+            console.error("Upload Error:", err);
+            alert("Upload failed. Check console for details.");
             setIsUploading(false);
         }
     };
@@ -343,7 +361,7 @@ const Dashboard = () => {
                                         {driveLink && driveLink.includes('drive.google.com') && (
                                             <div className="mt-4 border border-slate-200 rounded-xl overflow-hidden aspect-video bg-slate-100 relative group">
                                                 <iframe
-                                                    src={driveLink.replace('/view', '/preview').replace('?usp=sharing', '')}
+                                                    src={formatDrivePreview(driveLink)}
                                                     className="w-full h-full"
                                                     title="Drive Preview"
                                                     allow="autoplay"
@@ -476,7 +494,7 @@ const Dashboard = () => {
                                                     {item.googleDriveLink.includes('drive.google.com') && (
                                                         <div className="border border-slate-200 rounded-lg overflow-hidden aspect-video bg-white">
                                                             <iframe
-                                                                src={item.googleDriveLink.replace('/view', '/preview').replace('?usp=sharing', '')}
+                                                                src={formatDrivePreview(item.googleDriveLink)}
                                                                 className="w-full h-full border-0"
                                                                 title="History Preview"
                                                             ></iframe>
