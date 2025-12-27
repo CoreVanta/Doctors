@@ -4,7 +4,7 @@ import { collection, query, where, onSnapshot, doc, updateDoc, Timestamp, addDoc
 import {
     Users, CheckCircle2, PlayCircle, SkipForward, ArrowRight,
     ExternalLink, FileText, Clipboard, Search, Plus, Calendar,
-    History, Upload, X, Eye, Settings, Clock, Save, Shield
+    History, Upload, X, Eye, Settings, Clock, Save, Shield, MapPin, PhoneCall, Info
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
@@ -56,7 +56,10 @@ const Dashboard = () => {
             'Friday': { isOpen: false, startTime: '09:00', endTime: '17:00' },
             'Saturday': { isOpen: false, startTime: '09:00', endTime: '17:00' },
             'Sunday': { isOpen: true, startTime: '09:00', endTime: '17:00' }
-        }
+        },
+        clinicAddress: 'Clinic Address Here',
+        clinicPhone: '+20 123 456 789',
+        mapIframeUrl: ''
     });
 
     const todaysDate = format(new Date(), 'yyyy-MM-dd');
@@ -736,6 +739,62 @@ const Dashboard = () => {
                                             )}
                                         </div>
                                     ))}
+                                </div>
+
+                                <div className="space-y-4 pt-4 border-t border-slate-100">
+                                    <label className="block text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
+                                        <Info className="w-3 h-3" /> Clinic Public Info
+                                    </label>
+
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Clinic Address</label>
+                                        <div className="relative">
+                                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                            <input
+                                                type="text"
+                                                placeholder="Street Name, Building, Floor..."
+                                                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm transition-all focus:ring-2 focus:ring-medical-500 outline-none"
+                                                value={settings.clinicAddress}
+                                                onChange={(e) => setSettings({ ...settings, clinicAddress: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Clinic Phone (Public)</label>
+                                        <div className="relative">
+                                            <PhoneCall className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                            <input
+                                                type="text"
+                                                placeholder="+20 1xx xxx xxxx"
+                                                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm transition-all focus:ring-2 focus:ring-medical-500 outline-none"
+                                                value={settings.clinicPhone}
+                                                onChange={(e) => setSettings({ ...settings, clinicPhone: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase flex items-center justify-between">
+                                            <span>Google Maps IFrame Link</span>
+                                            <a href="https://www.google.com/maps" target="_blank" rel="noreferrer" className="text-medical-600 hover:underline lowercase font-normal italic">Get Link</a>
+                                        </label>
+                                        <textarea
+                                            placeholder='Paste the <iframe src="..."> here...'
+                                            rows={2}
+                                            className="w-full px-4 py-2 border border-slate-200 rounded-lg text-xs transition-all focus:ring-2 focus:ring-medical-500 outline-none resize-none"
+                                            value={settings.mapIframeUrl}
+                                            onChange={(e) => {
+                                                // Minimal extraction if they paste the whole iframe tag
+                                                let val = e.target.value;
+                                                if (val.includes('src="')) {
+                                                    val = val.split('src="')[1].split('"')[0];
+                                                }
+                                                setSettings({ ...settings, mapIframeUrl: val });
+                                            }}
+                                        />
+                                        <p className="text-[9px] text-slate-400 mt-1">Tip: Share {'>'} Embed a map {'>'} Copy HTML (only the URL inside src="")</p>
+                                    </div>
                                 </div>
 
                                 <div className="pt-4 border-t border-slate-100 flex gap-3">

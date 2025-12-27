@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebase';
 import { collection, addDoc, query, where, getDocs, onSnapshot, serverTimestamp, doc } from 'firebase/firestore';
-import { Calendar, User, Phone, Clock, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { Calendar, User, Phone, Clock, CheckCircle2, ShieldCheck, MapPin, PhoneCall } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, addMinutes } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
@@ -22,8 +22,20 @@ const Booking = () => {
             'Friday': { isOpen: false, startTime: '09:00', endTime: '17:00' },
             'Saturday': { isOpen: false, startTime: '09:00', endTime: '17:00' },
             'Sunday': { isOpen: true, startTime: '09:00', endTime: '17:00' }
-        }
+        },
+        clinicAddress: 'Clinic Address Here',
+        clinicPhone: '+20 123 456 789',
+        mapIframeUrl: ''
     });
+
+    const formatTime = (timeStr) => {
+        if (!timeStr) return '---';
+        const [hours, minutes] = timeStr.split(':');
+        const h = parseInt(hours);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const displayH = h % 12 || 12;
+        return `${displayH}:${minutes} ${ampm}`;
+    };
     const [stats, setStats] = useState({ totalBooked: 0, estimatedWait: 0 });
 
     useEffect(() => {
@@ -96,15 +108,17 @@ const Booking = () => {
             if (formData.date === format(now, 'yyyy-MM-dd') && now > baseTime) {
                 baseTime = now;
             }
-            const estimatedTime = format(addMinutes(baseTime, stats.totalBooked * settings.intervalMinutes), 'HH:mm');
+            const estimatedTime24 = format(addMinutes(baseTime, stats.totalBooked * settings.intervalMinutes), 'HH:mm');
             const dailyEnd = schedule?.endTime || '17:00';
 
             // Check if estimated time exceeds clinic hours
-            if (estimatedTime > dailyEnd) {
+            if (estimatedTime24 > dailyEnd) {
                 alert("Sorry, we cannot accept more bookings for this day as it exceeds clinic working hours.");
                 setLoading(false);
                 return;
             }
+
+            const estimatedTime = formatTime(estimatedTime24);
 
             const bookingData = {
                 name: String(formData.name),
@@ -217,7 +231,7 @@ const Booking = () => {
                                     <span className="font-medium text-slate-400 uppercase tracking-tighter text-[10px]">Working Hours</span>
                                     <span>
                                         {settings.dailySchedules?.[format(new Date(formData.date), 'EEEE')]?.isOpen
-                                            ? `${settings.dailySchedules[format(new Date(formData.date), 'EEEE')].startTime} - ${settings.dailySchedules[format(new Date(formData.date), 'EEEE')].endTime}`
+                                            ? `${formatTime(settings.dailySchedules[format(new Date(formData.date), 'EEEE')].startTime)} - ${formatTime(settings.dailySchedules[format(new Date(formData.date), 'EEEE')].endTime)}`
                                             : '---'}
                                     </span>
                                 </p>
@@ -225,6 +239,29 @@ const Booking = () => {
                                     <span className="font-medium text-slate-400 uppercase tracking-tighter text-[10px]">Daily Limit</span>
                                     <span>Max {settings.dailyLimit} patients</span>
                                 </p>
+                                <div className="pt-4 border-t border-slate-50 space-y-3">
+                                    <div className="flex gap-3">
+                                        <MapPin className="w-4 h-4 text-medical-600 shrink-0 mt-0.5" />
+                                        <span className="text-[11px] font-bold text-slate-700 leading-tight">{settings.clinicAddress}</span>
+                                    </div>
+                                    <div className="flex gap-3">
+                                        <PhoneCall className="w-4 h-4 text-medical-600 shrink-0" />
+                                        <span className="text-[11px] font-bold text-slate-700">{settings.clinicPhone}</span>
+                                    </div>
+                                </div>
+                                {settings.mapIframeUrl && (
+                                    <div className="mt-3 rounded-lg overflow-hidden h-32 border border-slate-100 shadow-inner">
+                                        <iframe
+                                            src={settings.mapIframeUrl}
+                                            width="100%"
+                                            height="100%"
+                                            style={{ border: 0 }}
+                                            allowFullScreen=""
+                                            loading="lazy"
+                                            referrerPolicy="no-referrer-when-downgrade"
+                                        ></iframe>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
