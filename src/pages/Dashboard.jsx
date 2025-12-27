@@ -92,14 +92,13 @@ const Dashboard = () => {
         const file = e.target.files[0];
         if (!file || !selectedPatient) return;
 
-        if (GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_SCRIPT_WEB_APP_URL') {
+        if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('YOUR_GOOGLE_SCRIPT')) {
             alert("Please set your Google Script URL in Dashboard.jsx first!");
             return;
         }
 
         setIsUploading(true);
         try {
-            // Convert file to Base64
             const reader = new FileReader();
             reader.readAsDataURL(file);
             reader.onload = async () => {
@@ -112,22 +111,37 @@ const Dashboard = () => {
                     phone: selectedPatient.phone
                 };
 
-                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                // 1. Upload the file (no-cors prevents reading response)
+                await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
-                    mode: 'no-cors', // Important for Google Apps Script Web Apps
+                    mode: 'no-cors',
                     body: JSON.stringify(payload)
                 });
 
-                // Note: 'no-cors' means we can't read the JSON response directly due to browser security
-                // but we can ask the user to paste the link or we can assume it worked if no error
-                // A better way is to use a direct redirect or a simpler message
+                // 2. Wait 2 seconds for Drive to process, then FETCH the link via GET
+                console.log("Upload sent, waiting for Drive processing...");
+                setTimeout(async () => {
+                    try {
+                        const getUrl = `${GOOGLE_SCRIPT_URL}?phone=${encodeURIComponent(selectedPatient.phone)}`;
+                        const response = await fetch(getUrl);
+                        const result = await response.json();
 
-                alert("File sent to Google Drive! If you set up the Script correctly, it's now in your folder.");
-                setDriveLink("Sent to Google Drive (Check your folder)");
-                setIsUploading(false);
+                        if (result.status === 'success') {
+                            setDriveLink(result.previewUrl);
+                            alert("File uploaded and linked successfully!");
+                        } else {
+                            alert("File uploaded, but could not retrieve preview link automatically. Please check your Drive.");
+                        }
+                    } catch (err) {
+                        console.error("GET link error:", err);
+                        alert("File uploaded, but there was an error showing the preview. Try 'Save Draft' and refresh.");
+                    } finally {
+                        setIsUploading(false);
+                    }
+                }, 3000);
             };
         } catch (err) {
-            console.error("Upload error:", err);
+            console.error("Upload process error:", err);
             alert("Upload failed: " + err.message);
             setIsUploading(false);
         }
@@ -155,22 +169,30 @@ const Dashboard = () => {
         if (!selectedPatient) return;
         try {
             const docRef = doc(db, 'bookings', selectedPatient.id);
-            await updateDoc(docRef, {
+            const finalData = {
                 notes: clinicalNotes,
                 googleDriveLink: driveLink,
                 nextAppointment: nextAppointment,
-                status: 'completed'
-            });
+                status: 'completed',
+                updatedAt: Timestamp.now()
+            };
 
-            // Also save to a central 'patients' clinical history (optional logic can be added here)
+            await updateDoc(docRef, finalData);
+
+            // Update local state to reflect changes in history immediately next time
+            const updatedBookings = bookings.map(b =>
+                b.id === selectedPatient.id ? { ...b, ...finalData } : b
+            );
+            setBookings(updatedBookings);
 
             setSelectedPatient(null);
             setClinicalNotes('');
             setDriveLink('');
             setNextAppointment('');
-            alert("Consultation completed and records saved.");
+            alert("Consultation completed and records saved permanentely.");
         } catch (err) {
-            console.error(err);
+            console.error("Save Notes Error:", err);
+            alert("Failed to save final notes: " + err.message);
         }
     };
 
