@@ -142,6 +142,46 @@ const Booking = () => {
 
             isDone = true;
             console.log("Success! Firestore Document ID:", docRef.id);
+
+            // Send WhatsApp confirmation message
+            try {
+                const accountSid = 'AC45a599b11744179644b0417f7ee74674';
+                const authToken = 'd4dff0de6991854e5ec2aa631a231153';
+                const twilioNumber = 'whatsapp:+14155238886';
+
+                // Format phone number
+                const formattedPhone = formData.phone.startsWith('+')
+                    ? formData.phone
+                    : `+20${formData.phone.replace(/^0+/, '')}`;
+                const whatsappNumber = `whatsapp:${formattedPhone}`;
+
+                const message = `مرحباً ${bookingData.name}! تم تأكيد حجزك ليوم ${bookingData.date}. رقم دورك: #${bookingData.queueNumber}. الوقت المتوقع: ${bookingData.estimatedTime}.`;
+
+                // Send via Twilio REST API
+                const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`),
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: new URLSearchParams({
+                        From: twilioNumber,
+                        To: whatsappNumber,
+                        Body: message
+                    })
+                });
+
+                if (response.ok) {
+                    console.log('WhatsApp message sent successfully!');
+                } else {
+                    const errorData = await response.json();
+                    console.error('Twilio Error:', errorData);
+                }
+            } catch (whatsappError) {
+                console.error('WhatsApp sending failed:', whatsappError);
+                // Don't block booking if WhatsApp fails
+            }
+
             setBookingConfirmed({ id: docRef.id, ...bookingData });
         } catch (error) {
             isDone = true;
