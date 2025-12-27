@@ -27,44 +27,50 @@ const Booking = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log("Starting booking submission...", formData);
+        console.log("Submit button clicked. Form data:", formData);
         setLoading(true);
 
+        let isDone = false;
+
         // Timeout to prevent infinite "Processing"
-        const timeout = setTimeout(() => {
-            if (loading) {
+        setTimeout(() => {
+            if (!isDone) {
+                console.warn("Firestore submission is taking too long (15s timeout reached)");
                 setLoading(false);
-                alert("The request is taking too long. Please check your internet connection or try again.");
+                alert("The connection to the database is slow. Please refresh the page and try again.");
             }
-        }, 15000); // 15 seconds timeout
+        }, 15000);
 
         try {
+            console.log("Current stats for queue calculation:", stats);
             const nextQueueNumber = (stats.totalBooked || 0) + 1;
-            console.log("Calculated next queue number:", nextQueueNumber);
 
             const bookingData = {
-                name: formData.name,
-                phone: formData.phone,
-                date: formData.date,
-                queueNumber: nextQueueNumber,
+                name: String(formData.name),
+                phone: String(formData.phone),
+                date: String(formData.date),
+                queueNumber: Number(nextQueueNumber),
                 status: 'pending',
-                timestamp: serverTimestamp(), // Use server timestamp
-                estimatedTime: format(addMinutes(new Date(), stats.estimatedWait), 'HH:mm')
+                createdAt: new Date().toISOString(), // Use ISO string for absolute safety
+                estimatedTime: String(format(addMinutes(new Date(), stats.estimatedWait || 0), 'HH:mm'))
             };
 
-            console.log("Sending to Firestore:", bookingData);
-            const docRef = await addDoc(collection(db, 'bookings'), bookingData);
-            console.log("Booking successful! Doc ID:", docRef.id);
+            console.log("Attempting to write to collection 'bookings' with data:", bookingData);
 
-            clearTimeout(timeout);
-            setBookingConfirmed({ id: docRef.id, ...bookingData, timestamp: new Date() });
+            const docRef = await addDoc(collection(db, 'bookings'), bookingData);
+
+            isDone = true;
+            console.log("Success! Firestore Document ID:", docRef.id);
+            setBookingConfirmed({ id: docRef.id, ...bookingData });
         } catch (error) {
-            console.error("DEBUG - Firestore Error:", error);
-            alert("Firestore Error: " + error.message);
-            clearTimeout(timeout);
+            isDone = true;
+            console.error("FIRESTORE ERROR DETECTED:", error);
+            console.error("Error Code:", error.code);
+            console.error("Error Message:", error.message);
+            alert("Database Error: " + error.message);
         } finally {
             setLoading(false);
-            console.log("Submission process finished.");
+            console.log("handleSubmit execution completed.");
         }
     };
 

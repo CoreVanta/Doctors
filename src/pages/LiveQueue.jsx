@@ -14,12 +14,15 @@ const LiveQueue = () => {
         // Listen to today's bookings
         const q = query(
             collection(db, 'bookings'),
-            where('date', '==', todaysDate),
-            orderBy('queueNumber', 'asc')
+            where('date', '==', todaysDate)
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            // Sort in-memory to avoid needing a Firestore composite index
+            data.sort((a, b) => (a.queueNumber || 0) - (b.queueNumber || 0));
+
             setBookings(data);
 
             // Find the currently calling number (first "calling" or last "completed" + 1)
