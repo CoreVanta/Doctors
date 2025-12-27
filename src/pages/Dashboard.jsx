@@ -67,7 +67,19 @@ const Dashboard = () => {
         },
         clinicAddress: 'Clinic Address Here',
         clinicPhone: '+20 123 456 789',
-        mapIframeUrl: ''
+        mapIframeUrl: '',
+        doctorProfile: {
+            name: 'Dr. Ahmed Hassan',
+            specialty: 'General Practitioner',
+            bio: 'Experienced physician dedicated to providing quality healthcare.',
+            photoUrl: ''
+        },
+        services: [
+            { id: '1', nameEn: 'General Consultation', nameAr: 'استشارة عامة', price: '$50', descEn: 'Comprehensive health check and prescription.', descAr: 'فحص صحي شامل ووصفة طبية.' },
+            { id: '2', nameEn: 'Follow-up Visit', nameAr: 'زيارة متابعة', price: '$30', descEn: 'Review of previous conditions and treatment progress.', descAr: 'مراجعة الحالات السابقة والتقدم في العلاج.' },
+            { id: '3', nameEn: 'Special Procedures', nameAr: 'إجراءات خاصة', price: 'From $100', descEn: 'Minor surgical procedures and specialized tests.', descAr: 'عمليات جراحية صغرى واختبارات متخصصة.' },
+            { id: '4', nameEn: 'Prescription Renewal', nameAr: 'تجديد الوصفة', price: '$20', descEn: 'Quick renewal of ongoing medications.', descAr: 'تجديد سريع للأدوية المستمرة.' }
+        ]
     });
 
     const todaysDate = format(new Date(), 'yyyy-MM-dd');

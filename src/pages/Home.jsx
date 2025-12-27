@@ -1,18 +1,41 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Activity, Calendar, Clock, ArrowRight, ShieldCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import { db } from '../firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
 
 const Home = () => {
-    const { t } = useTranslation();
-    const services = [
-        { name: t('home.services.gen_con'), price: '$50', description: t('home.services.gen_con_desc') },
-        { name: t('home.services.follow_up'), price: '$30', description: t('home.services.follow_up_desc') },
-        { name: t('home.services.special'), price: t('home.from') + ' $100', description: t('home.services.special_desc') },
-        { name: t('home.services.renewal'), price: '$20', description: t('home.services.renewal_desc') },
-    ];
+    const { t, i18n } = useTranslation();
+    const [doctorProfile, setDoctorProfile] = useState({
+        name: 'Dr. Ahmed Hassan',
+        specialty: 'General Practitioner',
+        bio: 'Experienced physician dedicated to providing quality healthcare.',
+        photoUrl: ''
+    });
+    const [services, setServices] = useState([
+        { id: '1', nameEn: 'General Consultation', nameAr: 'استشارة عامة', price: '$50', descEn: 'Comprehensive health check and prescription.', descAr: 'فحص صحي شامل ووصفة طبية.' },
+        { id: '2', nameEn: 'Follow-up Visit', nameAr: 'زيارة متابعة', price: '$30', descEn: 'Review of previous conditions and treatment progress.', descAr: 'مراجعة الحالات السابقة والتقدم في العلاج.' },
+        { id: '3', nameEn: 'Special Procedures', nameAr: 'إجراءات خاصة', price: 'From $100', descEn: 'Minor surgical procedures and specialized tests.', descAr: 'عمليات جراحية صغرى واختبارات متخصصة.' },
+        { id: '4', nameEn: 'Prescription Renewal', nameAr: 'تجديد الوصفة', price: '$20', descEn: 'Quick renewal of ongoing medications.', descAr: 'تجديد سريع للأدوية المستمرة.' }
+    ]);
+
+    useEffect(() => {
+        const unsubscribe = onSnapshot(doc(db, 'settings', 'clinic_settings'), (snapshot) => {
+            if (snapshot.exists()) {
+                const data = snapshot.data();
+                if (data.doctorProfile) {
+                    setDoctorProfile(data.doctorProfile);
+                }
+                if (data.services && data.services.length > 0) {
+                    setServices(data.services);
+                }
+            }
+        });
+        return () => unsubscribe();
+    }, []);
 
     return (
         <div className="flex flex-col min-h-screen">
@@ -38,12 +61,14 @@ const Home = () => {
                         transition={{ duration: 0.5 }}
                         className="max-w-4xl mx-auto"
                     >
-                        <h1 className="text-5xl md:text-6xl font-extrabold text-slate-900 mb-6 leading-tight">
-                            {t('home.hero_title')} <br />
-                            <span className="text-medical-600">{t('home.hero_subtitle')}</span>
+                        <h1 className="text-5xl md:text-6xl font-extrabold text-slate-900 mb-4 leading-tight">
+                            {doctorProfile.name}
                         </h1>
+                        <p className="text-2xl text-medical-600 font-semibold mb-6">
+                            {doctorProfile.specialty}
+                        </p>
                         <p className="text-xl text-slate-600 mb-10 max-w-2xl mx-auto">
-                            {t('home.hero_desc')}
+                            {doctorProfile.bio}
                         </p>
                         <div className="flex justify-center gap-4">
                             <Link to="/booking" className="btn-primary text-lg px-8 py-3 flex items-center gap-2">
@@ -62,16 +87,20 @@ const Home = () => {
                         <h2 className="text-3xl font-bold text-slate-900 mb-4">{t('home.our_services')}</h2>
                         <p className="text-slate-600">{t('home.pricing_desc')}</p>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {services.map((service, index) => (
+                    <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 ${services.length > 2 ? 'lg:grid-cols-4' : services.length === 2 ? 'lg:grid-cols-2' : 'lg:grid-cols-1'}`}>
+                        {services.map((service) => (
                             <motion.div
-                                key={index}
+                                key={service.id}
                                 whileHover={{ y: -5 }}
                                 className="medical-card flex flex-col justify-between"
                             >
                                 <div>
-                                    <h3 className="text-xl font-bold text-slate-900 mb-2">{service.name}</h3>
-                                    <p className="text-slate-600 text-sm mb-4">{service.description}</p>
+                                    <h3 className="text-xl font-bold text-slate-900 mb-2">
+                                        {i18n.language === 'ar' ? service.nameAr : service.nameEn}
+                                    </h3>
+                                    <p className="text-slate-600 text-sm mb-4">
+                                        {i18n.language === 'ar' ? service.descAr : service.descEn}
+                                    </p>
                                 </div>
                                 <div className="mt-4">
                                     <span className="text-2xl font-bold text-medical-600">{service.price}</span>
