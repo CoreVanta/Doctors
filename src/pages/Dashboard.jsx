@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { auth, db } from '../firebase';
 import { collection, query, where, onSnapshot, doc, updateDoc, Timestamp, addDoc, getDocs } from 'firebase/firestore';
 import {
-    Users, CheckCircle2, PlayCircle, SkipForward, ArrowRight,
+    Users, User, CheckCircle2, PlayCircle, SkipForward, ArrowRight,
     ExternalLink, FileText, Clipboard, Search, Plus, Calendar,
     History, Upload, X, Eye, Settings, Clock, Save, Shield, MapPin, PhoneCall, Info,
     Phone, FolderOpen, ChevronRight, ChevronLeft, Printer
