@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { db } from '../firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 
 const Home = () => {
     const { t, i18n } = useTranslation();
@@ -21,20 +21,32 @@ const Home = () => {
         { id: '3', nameEn: 'Special Procedures', nameAr: 'إجراءات خاصة', price: 'From $100', descEn: 'Minor surgical procedures and specialized tests.', descAr: 'عمليات جراحية صغرى واختبارات متخصصة.' },
         { id: '4', nameEn: 'Prescription Renewal', nameAr: 'تجديد الوصفة', price: '$20', descEn: 'Quick renewal of ongoing medications.', descAr: 'تجديد سريع للأدوية المستمرة.' }
     ]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = onSnapshot(doc(db, 'settings', 'clinic_settings'), (snapshot) => {
-            if (snapshot.exists()) {
-                const data = snapshot.data();
-                if (data.doctorProfile) {
-                    setDoctorProfile(data.doctorProfile);
+        // Use getDoc instead of onSnapshot for better performance (data doesn't change often)
+        const fetchSettings = async () => {
+            try {
+                const docRef = doc(db, 'settings', 'clinic_settings');
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.doctorProfile) {
+                        setDoctorProfile(data.doctorProfile);
+                    }
+                    if (data.services && data.services.length > 0) {
+                        setServices(data.services);
+                    }
                 }
-                if (data.services && data.services.length > 0) {
-                    setServices(data.services);
-                }
+            } catch (error) {
+                console.error('Error fetching settings:', error);
+            } finally {
+                setLoading(false);
             }
-        });
-        return () => unsubscribe();
+        };
+
+        fetchSettings();
     }, []);
 
     return (

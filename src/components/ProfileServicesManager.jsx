@@ -112,8 +112,8 @@ const ProfileServicesManager = ({ settings, setSettings, onClose }) => {
                     // Draw and compress
                     ctx.drawImage(img, 0, 0, width, height);
 
-                    // Convert to base64 with compression (0.7 quality for JPEG)
-                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                    // Convert to base64 with higher compression (0.5 quality for JPEG = smaller size)
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.5);
 
                     // Update settings with compressed image
                     setSettings({
