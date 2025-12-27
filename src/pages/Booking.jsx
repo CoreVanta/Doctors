@@ -354,7 +354,7 @@ const Booking = () => {
                 </div>
 
                 {/* Live Status Card - Moved to Bottom (Unified row) */}
-                <div className="bg-medical-600 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-medical-200 relative overflow-hidden group">
+                <div className="bg-medical-600 rounded-[2.5rem] mt-16 p-8 text-white shadow-2xl shadow-medical-200 relative overflow-hidden group">
                     <div className="absolute -right-10 -top-10 w-60 h-60 bg-white/10 rounded-full blur-3xl transition-transform group-hover:scale-150 duration-700" />
                     <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-medical-400/20 rounded-full blur-2xl" />
 
