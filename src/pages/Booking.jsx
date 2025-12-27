@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebase';
-import { collection, addDoc, query, where, getDocs, orderBy, limit, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, orderBy, limit, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { Calendar, User, Phone, Clock, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, addMinutes } from 'date-fns';
@@ -27,27 +27,44 @@ const Booking = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        console.log("Starting booking submission...", formData);
         setLoading(true);
+
+        // Timeout to prevent infinite "Processing"
+        const timeout = setTimeout(() => {
+            if (loading) {
+                setLoading(false);
+                alert("The request is taking too long. Please check your internet connection or try again.");
+            }
+        }, 15000); // 15 seconds timeout
+
         try {
-            // Using a simpler approach to avoid Firestore Index requirement
-            // We use the count from our live stats + 1
-            const nextQueueNumber = stats.totalBooked + 1;
+            const nextQueueNumber = (stats.totalBooked || 0) + 1;
+            console.log("Calculated next queue number:", nextQueueNumber);
 
             const bookingData = {
-                ...formData,
+                name: formData.name,
+                phone: formData.phone,
+                date: formData.date,
                 queueNumber: nextQueueNumber,
                 status: 'pending',
-                timestamp: new Date(),
+                timestamp: serverTimestamp(), // Use server timestamp
                 estimatedTime: format(addMinutes(new Date(), stats.estimatedWait), 'HH:mm')
             };
 
+            console.log("Sending to Firestore:", bookingData);
             const docRef = await addDoc(collection(db, 'bookings'), bookingData);
-            setBookingConfirmed({ id: docRef.id, ...bookingData });
+            console.log("Booking successful! Doc ID:", docRef.id);
+
+            clearTimeout(timeout);
+            setBookingConfirmed({ id: docRef.id, ...bookingData, timestamp: new Date() });
         } catch (error) {
-            console.error("Error adding booking: ", error);
-            alert("Error: " + error.message);
+            console.error("DEBUG - Firestore Error:", error);
+            alert("Firestore Error: " + error.message);
+            clearTimeout(timeout);
         } finally {
             setLoading(false);
+            console.log("Submission process finished.");
         }
     };
 
