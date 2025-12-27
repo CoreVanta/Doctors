@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Home from './pages/Home';
 import Booking from './pages/Booking';
@@ -18,7 +18,7 @@ const PrivateRoute = ({ children, doctorOnly = false }) => {
 function App() {
   return (
     <AuthProvider>
-      <Router basename="/Doctors">
+      <Router>
         <div className="min-h-screen bg-slate-50">
           <Routes>
             <Route path="/" element={<Home />} />

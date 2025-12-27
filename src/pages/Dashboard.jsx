@@ -5,7 +5,7 @@ import {
     Users, CheckCircle2, PlayCircle, SkipForward, ArrowRight,
     ExternalLink, FileText, Clipboard, Search, Plus, Calendar,
     History, Upload, X, Eye, Settings, Clock, Save, Shield, MapPin, PhoneCall, Info,
-    Phone, FolderOpen, ChevronRight, ChevronLeft
+    Phone, FolderOpen, ChevronRight, ChevronLeft, Printer
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
@@ -304,6 +304,78 @@ const Dashboard = () => {
             console.error("Save Notes Error:", err);
             alert("Failed to save final notes: " + err.message);
         }
+    };
+
+    const handlePrint = () => {
+        const printWindow = window.open('', '_blank');
+        const isRtl = i18n.language === 'ar';
+
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>${t('dashboard.print_pres')} - ${selectedPatient.name}</title>
+                    <style>
+                        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Noto+Sans+Arabic:wght@400;700&display=swap');
+                        body { 
+                            font-family: 'Inter', 'Noto Sans Arabic', sans-serif; 
+                            padding: 40px; 
+                            line-height: 1.6; 
+                            color: #1e293b;
+                            direction: ${isRtl ? 'rtl' : 'ltr'};
+                            text-align: ${isRtl ? 'right' : 'left'};
+                        }
+                        .header { border-bottom: 2px solid #0ea5e9; padding-bottom: 20px; margin-bottom: 30px; }
+                        .clinic-name { font-size: 24px; font-weight: bold; color: #0369a1; }
+                        .patient-info { margin-bottom: 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; background: #f8fafc; padding: 20px; rounded: 12px; }
+                        .info-item { font-size: 14px; }
+                        .info-label { font-weight: bold; color: #64748b; text-transform: uppercase; font-size: 10px; display: block; }
+                        .notes-section { white-space: pre-wrap; margin-top: 30px; font-size: 16px; min-height: 400px; border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px; }
+                        .footer { margin-top: 50px; border-top: 1px solid #e2e8f0; pt: 20px; font-size: 12px; color: #94a3b8; }
+                        @media print {
+                            body { padding: 0; }
+                            .no-print { display: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <div class="clinic-name">${settings.clinicAddress.split(',')[0] || t('dashboard.title')}</div>
+                        <div style="font-size: 12px; color: #64748b;">${settings.clinicAddress} | ${settings.clinicPhone}</div>
+                    </div>
+                    
+                    <div class="patient-info">
+                        <div class="info-item">
+                            <span class="info-label">${t('labels.full_name')}</span>
+                            <strong>${selectedPatient.name}</strong>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">${t('booking.schedule.office_hours')}</span>
+                            <strong>${format(new Date(), 'yyyy-MM-dd HH:mm')}</strong>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Phone</span>
+                            <strong>${selectedPatient.phone}</strong>
+                        </div>
+                    </div>
+                    
+                    <div class="notes-section">
+                        <h3 style="margin-top: 0; color: #0ea5e9;">${t('dashboard.notes_title')}</h3>
+                        ${clinicalNotes || t('dashboard.no_notes')}
+                    </div>
+                    
+                    <div class="footer">
+                        <p>${t('dashboard.consultation_saved')}</p>
+                    </div>
+                    <script>
+                        window.onload = () => {
+                            window.print();
+                            window.onafterprint = () => window.close();
+                        };
+                    </script>
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
     };
 
     const currentPatient = bookings.find(b => b.status === 'calling');
