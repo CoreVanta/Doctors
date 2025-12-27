@@ -290,31 +290,6 @@ const Booking = () => {
 
                     {/* Sidebar - Right Side on Desktop */}
                     <div className="lg:col-span-12 xl:col-span-4 space-y-8 order-1 xl:order-2">
-                        {/* Live Status Card */}
-                        <div className="bg-medical-600 rounded-[2rem] p-8 text-white shadow-2xl shadow-medical-200 relative overflow-hidden group">
-                            <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl transition-transform group-hover:scale-150 duration-700" />
-
-                            <h3 className="text-xl font-bold mb-8 flex items-center gap-3 relative">
-                                <Clock className="w-6 h-6" /> Live Queue Status
-                            </h3>
-
-                            <div className="grid grid-cols-2 xl:grid-cols-1 gap-6 relative">
-                                <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20">
-                                    <span className="block text-white/60 text-xs uppercase font-bold mb-2 tracking-wider">Patients Today</span>
-                                    <div className="flex items-baseline gap-2">
-                                        <span className="text-5xl font-black">{stats.totalBooked}</span>
-                                        <span className="text-white/60 text-sm font-bold">Total</span>
-                                    </div>
-                                </div>
-                                <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20">
-                                    <span className="block text-white/60 text-xs uppercase font-bold mb-2 tracking-wider">Estimated Wait</span>
-                                    <div className="flex items-baseline gap-2">
-                                        <span className="text-5xl font-black">{stats.estimatedWait}</span>
-                                        <span className="text-white/60 text-sm font-bold">Minutes</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
 
                         {/* Clinic Details Card */}
                         <div className="bg-white rounded-[2rem] shadow-xl shadow-slate-200/60 overflow-hidden border border-slate-100">
@@ -373,6 +348,38 @@ const Booking = () => {
                                         ></iframe>
                                     </div>
                                 )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Live Status Card - Moved to Bottom (Unified row) */}
+                <div className="bg-medical-600 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-medical-200 relative overflow-hidden group">
+                    <div className="absolute -right-10 -top-10 w-60 h-60 bg-white/10 rounded-full blur-3xl transition-transform group-hover:scale-150 duration-700" />
+                    <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-medical-400/20 rounded-full blur-2xl" />
+
+                    <div className="relative flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left">
+                        <div className="space-y-2">
+                            <h3 className="text-2xl font-black flex items-center gap-3">
+                                <Clock className="w-8 h-8 text-medical-200" /> Live Queue Status
+                            </h3>
+                            <p className="text-medical-100 font-medium text-sm">Real-time availability and estimated waiting times for today.</p>
+                        </div>
+
+                        <div className="flex flex-wrap justify-center gap-6">
+                            <div className="bg-white/10 backdrop-blur-md px-8 py-5 rounded-[2rem] border border-white/20 min-w-[180px]">
+                                <span className="block text-white/60 text-[10px] uppercase font-black mb-1 tracking-widest text-center">Patients Today</span>
+                                <div className="flex items-baseline justify-center gap-2">
+                                    <span className="text-3xl font-black">{stats.totalBooked}</span>
+                                    <span className="text-white/60 text-[10px] font-bold uppercase">Total</span>
+                                </div>
+                            </div>
+                            <div className="bg-white/10 backdrop-blur-md px-8 py-5 rounded-[2rem] border border-white/20 min-w-[180px]">
+                                <span className="block text-white/60 text-[10px] uppercase font-black mb-1 tracking-widest text-center">Estimated Wait</span>
+                                <div className="flex items-baseline justify-center gap-2">
+                                    <span className="text-3xl font-black">{stats.estimatedWait}</span>
+                                    <span className="text-white/60 text-[10px] font-bold uppercase">Minutes</span>
+                                </div>
                             </div>
                         </div>
                     </div>
