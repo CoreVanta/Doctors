@@ -2,13 +2,16 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Activity, Calendar, Clock, ArrowRight, ShieldCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
 const Home = () => {
+    const { t } = useTranslation();
     const services = [
-        { name: 'General Consultation', price: '$50', description: 'Comprehensive health check and prescription.' },
-        { name: 'Follow-up Visit', price: '$30', description: 'Review of previous conditions and treatment progress.' },
-        { name: 'Special Procedures', price: 'From $100', description: 'Minor surgical procedures and specialized tests.' },
-        { name: 'Prescription Renewal', price: '$20', description: 'Quick renewal of ongoing medications.' },
+        { name: t('home.services.gen_con'), price: '$50', description: t('home.services.gen_con_desc') },
+        { name: t('home.services.follow_up'), price: '$30', description: t('home.services.follow_up_desc') },
+        { name: t('home.services.special'), price: t('home.from') + ' $100', description: t('home.services.special_desc') },
+        { name: t('home.services.renewal'), price: '$20', description: t('home.services.renewal_desc') },
     ];
 
     return (
@@ -19,9 +22,10 @@ const Home = () => {
                     <Activity className="text-medical-600 w-8 h-8" />
                     <span className="text-xl font-bold text-slate-900 tracking-tight">MedicoQueue</span>
                 </div>
-                <div className="flex gap-4">
-                    <Link to="/live-queue" className="text-slate-600 hover:text-medical-600 font-medium">Live Queue</Link>
-                    <Link to="/booking" className="btn-primary">Book Now</Link>
+                <div className="flex items-center gap-6">
+                    <Link to="/live-queue" className="text-slate-600 hover:text-medical-600 font-medium">{t('nav.live_queue')}</Link>
+                    <LanguageSwitcher />
+                    <Link to="/booking" className="btn-primary">{t('nav.book_now')}</Link>
                 </div>
             </nav>
 
@@ -35,18 +39,18 @@ const Home = () => {
                         className="max-w-4xl mx-auto"
                     >
                         <h1 className="text-5xl md:text-6xl font-extrabold text-slate-900 mb-6 leading-tight">
-                            Modern Healthcare <br />
-                            <span className="text-medical-600">Simplified</span>
+                            {t('home.hero_title')} <br />
+                            <span className="text-medical-600">{t('home.hero_subtitle')}</span>
                         </h1>
                         <p className="text-xl text-slate-600 mb-10 max-w-2xl mx-auto">
-                            Skip the waiting room. Book your appointment online, track your queue status in real-time, and get notified when it's your turn.
+                            {t('home.hero_desc')}
                         </p>
                         <div className="flex justify-center gap-4">
                             <Link to="/booking" className="btn-primary text-lg px-8 py-3 flex items-center gap-2">
-                                Start Booking <ArrowRight className="w-5 h-5" />
+                                {t('home.start_booking')} <ArrowRight className="w-5 h-5 rtl:rotate-180" />
                             </Link>
                             <Link to="/live-queue" className="btn-secondary text-lg px-8 py-3">
-                                View Live Queue
+                                {t('home.view_live_queue')}
                             </Link>
                         </div>
                     </motion.div>
@@ -55,8 +59,8 @@ const Home = () => {
                 {/* Pricing Table Section */}
                 <section className="py-20 px-6 max-w-7xl mx-auto">
                     <div className="text-center mb-16">
-                        <h2 className="text-3xl font-bold text-slate-900 mb-4">Our Services</h2>
-                        <p className="text-slate-600">Transparent pricing for all your medical needs.</p>
+                        <h2 className="text-3xl font-bold text-slate-900 mb-4">{t('home.our_services')}</h2>
+                        <p className="text-slate-600">{t('home.pricing_desc')}</p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         {services.map((service, index) => (
@@ -72,7 +76,7 @@ const Home = () => {
                                 <div className="mt-4">
                                     <span className="text-2xl font-bold text-medical-600">{service.price}</span>
                                     <button className="w-full mt-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors text-slate-700 font-medium">
-                                        Details
+                                        {t('home.details')}
                                     </button>
                                 </div>
                             </motion.div>
@@ -88,10 +92,10 @@ const Home = () => {
                         <span className="text-xl font-bold">MedicoQueue</span>
                     </div>
                     <div className="text-slate-400 text-sm">
-                        © 2025 MedicoQueue. All rights reserved. Professional Medical Management System.
+                        {t('home.footer_copy')}
                     </div>
                     <div className="flex gap-6">
-                        <Link to="/login" className="text-slate-400 hover:text-white transition-colors">Doctor Portal</Link>
+                        <Link to="/login" className="text-slate-400 hover:text-white transition-colors">{t('nav.doctor_portal')}</Link>
                     </div>
                 </div>
             </footer>

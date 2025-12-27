@@ -9,6 +9,10 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
+import { enUS, arSA } from 'date-fns/locale';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
 // REPLACE THIS with your Google Apps Script Web App URL
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyK_DSjFavVCsE0DH49qxke-NVR8Nq_nFP3saZD86VKGIQ1TDPxIF3WTmwz995Oa46tGw/exec';
@@ -36,6 +40,9 @@ const formatDrivePreview = (url, forceIframe = false) => {
 };
 
 const Dashboard = () => {
+    const { t, i18n } = useTranslation();
+    const currentLocale = i18n.language === 'ar' ? arSA : enUS;
+    const navigate = useNavigate();
     const [bookings, setBookings] = useState([]);
     const [selectedPatient, setSelectedPatient] = useState(null);
     const [clinicalNotes, setClinicalNotes] = useState('');
@@ -292,7 +299,7 @@ const Dashboard = () => {
             setClinicalNotes('');
             setDriveLink('');
             setNextAppointment('');
-            alert("Consultation completed and records saved permanentely.");
+            alert(t('dashboard.consultation_saved'));
         } catch (err) {
             console.error("Save Notes Error:", err);
             alert("Failed to save final notes: " + err.message);
@@ -305,12 +312,12 @@ const Dashboard = () => {
     return (
         <div className="flex h-screen bg-slate-50">
             {/* Sidebar */}
-            <div className="w-80 bg-white border-r border-slate-200 flex flex-col">
-                <div className="p-6 border-b border-slate-100 flex items-center gap-3">
+            <div className="w-80 bg-white border-r rtl:border-r-0 rtl:border-l border-slate-200 flex flex-col">
+                <div className="p-6 border-b border-slate-100 flex items-center gap-3 rtl:flex-row-reverse">
                     <div className="bg-medical-600 p-2 rounded-lg">
                         <Users className="text-white w-6 h-6" />
                     </div>
-                    <h2 className="font-bold text-slate-900 text-lg">Daily Queue</h2>
+                    <h2 className="font-bold text-slate-900 text-lg">{t('dashboard.sidebar.queue')}</h2>
                 </div>
 
                 <div className="flex-grow overflow-y-auto p-4 space-y-3">
@@ -323,27 +330,30 @@ const Dashboard = () => {
                                 : 'bg-white border-slate-100 hover:border-medical-200'
                                 }`}
                         >
-                            <div className="flex justify-between items-start mb-1">
+                            <div className="flex justify-between items-start mb-1 rtl:flex-row-reverse">
                                 <span className="text-xs font-bold text-medical-600">#{booking.queueNumber}</span>
                                 <span className={`text-[10px] uppercase font-black px-2 py-0.5 rounded-full ${booking.status === 'calling' ? 'bg-orange-100 text-orange-600' :
                                     booking.status === 'completed' ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-500'
                                     }`}>
-                                    {booking.status}
+                                    {t(`live_queue.status.${booking.status}`)}
                                 </span>
                             </div>
-                            <h4 className="font-bold text-slate-800 truncate">{booking.name}</h4>
-                            <p className="text-xs text-slate-500">{booking.estimatedTime}</p>
+                            <h4 className="font-bold text-slate-800 truncate rtl:text-right">{booking.name}</h4>
+                            <p className="text-xs text-slate-500 rtl:text-right">{booking.estimatedTime}</p>
                         </div>
                     ))}
-                    {bookings.length === 0 && <p className="text-center text-slate-400 py-10 text-sm">No bookings for today.</p>}
+                    {bookings.length === 0 && <p className="text-center text-slate-400 py-10 text-sm">{t('live_queue.empty')}</p>}
                 </div>
 
-                <div className="p-4 border-t border-slate-100">
+                <div className="p-4 border-t border-slate-100 space-y-4">
+                    <div className="flex justify-center">
+                        <LanguageSwitcher />
+                    </div>
                     <button
                         onClick={() => auth.signOut()}
                         className="w-full py-2 text-slate-500 hover:text-red-500 text-sm font-medium"
                     >
-                        Logout
+                        {t('dashboard.sidebar.logout')}
                     </button>
                 </div>
             </div>
@@ -354,15 +364,15 @@ const Dashboard = () => {
                 <div className="bg-white border-b border-slate-200 p-6 flex justify-between items-center shadow-sm">
                     <div className="flex items-center gap-6">
                         <div>
-                            <h1 className="text-2xl font-bold text-slate-900">Patient Consultation</h1>
-                            <p className="text-slate-500 text-sm font-medium">{format(new Date(), 'EEEE, MMMM do')}</p>
+                            <h1 className="text-2xl font-bold text-slate-900">{t('dashboard.title')}</h1>
+                            <p className="text-slate-500 text-sm font-medium">{format(new Date(), 'EEEE, MMMM do', { locale: currentLocale })}</p>
                         </div>
                         <button
                             onClick={() => setShowSettings(true)}
                             className="flex items-center gap-2 px-4 py-2 bg-medical-50 text-medical-700 rounded-xl hover:bg-medical-100 transition-all border border-medical-100 font-bold text-sm"
                         >
                             <Settings className="w-4 h-4" />
-                            <span>Clinic Settings</span>
+                            <span>{t('dashboard.settings_btn')}</span>
                         </button>
                     </div>
 
@@ -372,7 +382,7 @@ const Dashboard = () => {
                                 onClick={() => updateStatus(nextUp.id, 'calling')}
                                 className="btn-primary flex items-center gap-2"
                             >
-                                <PlayCircle className="w-5 h-5" /> Call Next Patient (#{nextUp.queueNumber})
+                                <PlayCircle className="w-5 h-5" /> {t('dashboard.call_next')} (#{nextUp.queueNumber})
                             </button>
                         )}
                         {currentPatient && (
@@ -380,7 +390,7 @@ const Dashboard = () => {
                                 onClick={() => updateStatus(currentPatient.id, 'completed')}
                                 className="btn-secondary flex items-center gap-2"
                             >
-                                <CheckCircle2 className="w-5 h-5" /> Mark Completed
+                                <CheckCircle2 className="w-5 h-5" /> {t('dashboard.mark_completed')}
                             </button>
                         )}
                     </div>
@@ -395,19 +405,19 @@ const Dashboard = () => {
                             className="max-w-7xl mx-auto space-y-8"
                         >
                             <div className="flex justify-between items-end bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-                                <div className="space-y-1">
+                                <div className="space-y-1 text-left rtl:text-right">
                                     <h2 className="text-4xl font-black text-slate-900 tracking-tight">{selectedPatient.name}</h2>
                                     <div className="flex items-center gap-4 text-slate-500 font-medium">
                                         <div className="flex items-center gap-1.5 bg-slate-100 px-3 py-1 rounded-full text-xs">
-                                            <Clipboard className="w-3.5 h-3.5 text-medical-600" /> Queue #{selectedPatient.queueNumber}
+                                            <Clipboard className="w-3.5 h-3.5 text-medical-600" /> {t('live_queue.title').split(' ')[0]} #{selectedPatient.queueNumber}
                                         </div>
                                         <div className="flex items-center gap-1.5 bg-slate-100 px-3 py-1 rounded-full text-xs">
                                             <Phone className="w-3.5 h-3.5 text-medical-600" /> {selectedPatient.phone}
                                         </div>
                                     </div>
                                 </div>
-                                <div className="text-right bg-medical-50 border border-medical-100 p-4 rounded-2xl min-w-[150px]">
-                                    <span className="text-[10px] text-medical-600 uppercase font-black tracking-widest block mb-1">Booking Time</span>
+                                <div className="text-right rtl:text-left bg-medical-50 border border-medical-100 p-4 rounded-2xl min-w-[150px]">
+                                    <span className="text-[10px] text-medical-600 uppercase font-black tracking-widest block mb-1">{t('live_queue.scheduled_for')}</span>
                                     <p className="text-2xl font-black text-slate-900 leading-none">{selectedPatient.estimatedTime}</p>
                                 </div>
                             </div>
@@ -421,19 +431,19 @@ const Dashboard = () => {
                                                 <div className="bg-medical-100 p-2 rounded-xl">
                                                     <FileText className="w-5 h-5 text-medical-600" />
                                                 </div>
-                                                Clinical Notes & Diagnosis
+                                                {t('dashboard.notes_title')}
                                             </label>
                                             <div className="text-[10px] text-slate-400 font-bold uppercase animate-pulse flex items-center gap-1">
                                                 <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                                                Autosave Enabled
+                                                {t('dashboard.autosave')}
                                             </div>
                                         </div>
                                         <textarea
                                             id="clinicalNotes"
                                             name="clinicalNotes"
                                             rows={18}
-                                            className="w-full p-6 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-medical-500/10 focus:border-medical-500 transition-all outline-none resize-none bg-slate-50/50 focus:bg-white text-slate-700 font-medium text-base leading-relaxed placeholder:text-slate-300"
-                                            placeholder="Start typing examination details, diagnosis, and treatment plan..."
+                                            className="w-full p-6 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-medical-500/10 focus:border-medical-500 transition-all outline-none resize-none bg-slate-50/50 focus:bg-white text-slate-700 font-medium text-base leading-relaxed placeholder:text-slate-300 rtl:text-right"
+                                            placeholder={t('dashboard.notes_placeholder')}
                                             value={clinicalNotes}
                                             onChange={(e) => setClinicalNotes(e.target.value)}
                                         />
@@ -448,19 +458,19 @@ const Dashboard = () => {
                                             <div className="bg-orange-100 p-2 rounded-xl">
                                                 <FolderOpen className="w-5 h-5 text-orange-600" />
                                             </div>
-                                            Patient Records
+                                            {t('dashboard.records_title')}
                                         </label>
 
                                         <div className="space-y-6">
                                             <div className="flex gap-3">
                                                 <div className="relative flex-grow group">
-                                                    <ExternalLink className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-medical-500 transition-colors w-5 h-5" />
+                                                    <ExternalLink className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-medical-500 transition-colors w-5 h-5 rtl:right-4 rtl:left-auto" />
                                                     <input
                                                         id="driveLink"
                                                         name="driveLink"
                                                         type="url"
-                                                        className="w-full pl-12 pr-4 py-4 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-medical-500/10 focus:border-medical-500 transition-all outline-none bg-slate-50/50 focus:bg-white text-sm"
-                                                        placeholder="Drive Link or Auto-upload"
+                                                        className="w-full pl-12 pr-4 rtl:pr-12 rtl:pl-4 py-4 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-medical-500/10 focus:border-medical-500 transition-all outline-none bg-slate-50/50 focus:bg-white text-sm"
+                                                        placeholder={t('dashboard.drive_link_placeholder')}
                                                         value={driveLink}
                                                         onChange={(e) => setDriveLink(e.target.value)}
                                                     />
@@ -529,17 +539,17 @@ const Dashboard = () => {
                                     {/* Next Appt & Quick Actions */}
                                     <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm space-y-8">
                                         <div>
-                                            <label htmlFor="nextAppt" className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                            <label htmlFor="nextAppt" className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2 rtl:flex-row-reverse rtl:justify-end">
                                                 <Calendar className="w-4 h-4 text-medical-600" />
-                                                Schedule Next Appointment
+                                                {t('dashboard.next_app')}
                                             </label>
                                             <div className="relative">
-                                                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 pointer-events-none" />
+                                                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 pointer-events-none rtl:right-4 rtl:left-auto" />
                                                 <input
                                                     id="nextAppt"
                                                     name="nextAppt"
                                                     type="date"
-                                                    className="w-full pl-12 pr-4 py-4 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-medical-500/10 focus:border-medical-500 transition-all outline-none bg-slate-50/50 focus:bg-white font-bold text-slate-700"
+                                                    className="w-full pl-12 pr-4 rtl:pr-12 rtl:pl-4 py-4 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-medical-500/10 focus:border-medical-500 transition-all outline-none bg-slate-50/50 focus:bg-white font-bold text-slate-700"
                                                     value={nextAppointment}
                                                     onChange={(e) => setNextAppointment(e.target.value)}
                                                 />
@@ -547,35 +557,35 @@ const Dashboard = () => {
                                         </div>
 
                                         <div className="pt-8 border-t border-slate-50">
-                                            <h4 className="text-sm font-bold text-slate-800 mb-4 uppercase tracking-widest">Quick Utilities</h4>
+                                            <h4 className="text-sm font-bold text-slate-800 mb-4 uppercase tracking-widest rtl:text-right">{t('dashboard.quick_actions')}</h4>
                                             <div className="grid grid-cols-1 gap-3">
                                                 <button
                                                     onClick={() => setShowHistory(true)}
                                                     className="group w-full flex items-center justify-between p-4 rounded-2xl bg-slate-50 hover:bg-medical-600 transition-all duration-300"
                                                 >
-                                                    <div className="flex items-center gap-3">
+                                                    <div className="flex items-center gap-3 rtl:flex-row-reverse">
                                                         <div className="bg-white p-2 rounded-lg group-hover:bg-medical-500 text-medical-600 group-hover:text-white transition-colors">
                                                             <History className="w-5 h-5" />
                                                         </div>
-                                                        <div className="text-left">
-                                                            <span className="block text-xs font-bold text-slate-700 group-hover:text-white">Medical History</span>
-                                                            <span className="block text-[10px] text-slate-400 group-hover:text-medical-200 uppercase font-black">{patientHistory.length} Previous Records</span>
+                                                        <div className="text-left rtl:text-right">
+                                                            <span className="block text-xs font-bold text-slate-700 group-hover:text-white">{t('dashboard.med_history')}</span>
+                                                            <span className="block text-[10px] text-slate-400 group-hover:text-medical-200 uppercase font-black">{patientHistory.length} {t('dashboard.records_found')}</span>
                                                         </div>
                                                     </div>
-                                                    <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-white" />
+                                                    <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-white rtl:rotate-180" />
                                                 </button>
 
-                                                <button className="group w-full flex items-center justify-between p-4 rounded-2xl bg-slate-50 hover:bg-slate-900 transition-all duration-300">
-                                                    <div className="flex items-center gap-3">
+                                                <button onClick={handlePrint} className="group w-full flex items-center justify-between p-4 rounded-2xl bg-slate-50 hover:bg-slate-900 transition-all duration-300">
+                                                    <div className="flex items-center gap-3 rtl:flex-row-reverse">
                                                         <div className="bg-white p-2 rounded-lg group-hover:bg-slate-800 text-slate-400 group-hover:text-white transition-colors">
-                                                            <FileText className="w-5 h-5" />
+                                                            <Printer className="w-5 h-5" />
                                                         </div>
-                                                        <div className="text-left">
-                                                            <span className="block text-xs font-bold text-slate-700 group-hover:text-white">Prescription</span>
-                                                            <span className="block text-[10px] text-slate-400 group-hover:text-slate-500 uppercase font-black">Generate & Print</span>
+                                                        <div className="text-left rtl:text-right">
+                                                            <span className="block text-xs font-bold text-slate-700 group-hover:text-white">{t('dashboard.print_pres')}</span>
+                                                            <span className="block text-[10px] text-slate-400 group-hover:text-slate-500 uppercase font-black">{t('dashboard.print_hint')}</span>
                                                         </div>
                                                     </div>
-                                                    <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-white" />
+                                                    <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-white rtl:rotate-180" />
                                                 </button>
                                             </div>
                                         </div>
@@ -589,20 +599,20 @@ const Dashboard = () => {
                                     onClick={() => handleSaveDraft(true)}
                                     className="px-8 py-4 bg-slate-100 text-slate-600 rounded-2xl hover:bg-slate-200 transition-all font-black text-xs uppercase tracking-widest flex items-center gap-2"
                                 >
-                                    <Save className="w-4 h-4" /> Save as Draft
+                                    <Save className="w-4 h-4" /> {t('dashboard.save_draft')}
                                 </button>
                                 <div className="flex items-center gap-6">
                                     <button
                                         onClick={() => setSelectedPatient(null)}
                                         className="text-slate-400 font-bold text-xs uppercase tracking-widest hover:text-red-500 transition-colors"
                                     >
-                                        Exit Session
+                                        {t('dashboard.exit_session')}
                                     </button>
                                     <button
                                         onClick={handleSaveNotes}
                                         className="bg-medical-600 hover:bg-medical-700 text-white px-12 py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-medical-200 transition-all hover:scale-105 active:scale-95 flex items-center gap-3"
                                     >
-                                        <CheckCircle2 className="w-5 h-5" /> Complete Consultation
+                                        <CheckCircle2 className="w-5 h-5" /> {t('dashboard.complete_con')}
                                     </button>
                                 </div>
                             </div>
@@ -610,7 +620,7 @@ const Dashboard = () => {
                     ) : (
                         <div className="h-full flex flex-col items-center justify-center text-slate-400">
                             <Clipboard className="w-16 h-16 mb-4 opacity-20" />
-                            <p className="text-lg">Select a patient from the queue to start consultation</p>
+                            <p className="text-lg">{t('dashboard.no_patient')}</p>
                         </div>
                     )}
                 </div>
@@ -628,8 +638,8 @@ const Dashboard = () => {
                         >
                             <div className="p-6 border-b border-slate-100 flex justify-between items-center">
                                 <div>
-                                    <h3 className="text-xl font-bold text-slate-900">Medical History</h3>
-                                    <p className="text-sm text-slate-500">{selectedPatient?.name}</p>
+                                    <h3 className="text-xl font-bold text-slate-900 rtl:text-right">{t('dashboard.med_history')}</h3>
+                                    <p className="text-sm text-slate-500 rtl:text-right">{selectedPatient?.name}</p>
                                 </div>
                                 <button
                                     onClick={() => setShowHistory(false)}
@@ -642,23 +652,23 @@ const Dashboard = () => {
                             <div className="flex-grow overflow-y-auto p-6 space-y-6">
                                 {patientHistory.length === 0 ? (
                                     <div className="text-center py-12 text-slate-400">
-                                        No previous records found for this patient.
+                                        {t('dashboard.no_history')}
                                     </div>
                                 ) : (
                                     patientHistory.map((item) => (
                                         <div key={item.id} className="border border-slate-100 rounded-xl p-4 bg-slate-50/50">
-                                            <div className="flex justify-between items-start mb-3">
-                                                <div className="flex items-center gap-2">
+                                            <div className="flex justify-between items-start mb-3 rtl:flex-row-reverse">
+                                                <div className="flex items-center gap-2 rtl:flex-row-reverse">
                                                     <Calendar className="w-4 h-4 text-medical-600" />
                                                     <span className="font-bold text-slate-700">{item.date}</span>
                                                 </div>
-                                                <span className="text-[10px] uppercase font-black bg-green-100 text-green-600 px-2 py-0.5 rounded-full">Completed</span>
+                                                <span className="text-[10px] uppercase font-black bg-green-100 text-green-600 px-2 py-0.5 rounded-full">{t('live_queue.status.completed')}</span>
                                             </div>
-                                            <div className="bg-white p-3 rounded-lg border border-slate-100 mb-3 text-sm text-slate-600 whitespace-pre-wrap relative">
-                                                {item.notes || "No clinical notes provided."}
+                                            <div className="bg-white p-3 rounded-lg border border-slate-100 mb-3 text-sm text-slate-600 whitespace-pre-wrap relative rtl:text-right">
+                                                {item.notes || t('dashboard.no_notes')}
                                                 {item.nextAppointment && (
-                                                    <div className="mt-2 pt-2 border-t border-slate-50 flex items-center gap-2 text-medical-600 font-bold text-[10px] uppercase">
-                                                        <Calendar className="w-3 h-3" /> Next Appointment: {item.nextAppointment}
+                                                    <div className="mt-2 pt-2 border-t border-slate-50 flex items-center gap-2 text-medical-600 font-bold text-[10px] uppercase rtl:flex-row-reverse">
+                                                        <Calendar className="w-3 h-3" /> {t('dashboard.next_app')}: {item.nextAppointment}
                                                     </div>
                                                 )}
                                             </div>
@@ -669,15 +679,15 @@ const Dashboard = () => {
                                                             href={item.googleDriveLink}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="inline-flex items-center gap-2 text-xs font-bold text-medical-600 hover:underline"
+                                                            className="inline-flex items-center gap-2 text-xs font-bold text-medical-600 hover:underline rtl:flex-row-reverse"
                                                         >
-                                                            <ExternalLink className="w-3 h-3" /> Open full file
+                                                            <ExternalLink className="w-3 h-3" /> {t('dashboard.open_file')}
                                                         </a>
                                                         <button
                                                             onClick={() => setVisibleRecordId(visibleRecordId === item.id ? null : item.id)}
-                                                            className="text-xs font-bold text-slate-500 hover:text-medical-600 flex items-center gap-1"
+                                                            className="text-xs font-bold text-slate-500 hover:text-medical-600 flex items-center gap-1 rtl:flex-row-reverse"
                                                         >
-                                                            <Eye className="w-3 h-3" /> {visibleRecordId === item.id ? 'Hide Preview' : 'Show Preview'}
+                                                            <Eye className="w-3 h-3" /> {visibleRecordId === item.id ? t('dashboard.hide_preview') : t('dashboard.show_preview')}
                                                         </button>
                                                     </div>
 
@@ -723,7 +733,7 @@ const Dashboard = () => {
                             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-medical-600 text-white">
                                 <div className="flex items-center gap-2">
                                     <Settings className="w-5 h-5" />
-                                    <h3 className="text-xl font-bold">Clinic Settings</h3>
+                                    <h3 className="text-xl font-bold">{t('dashboard.settings_btn')}</h3>
                                 </div>
                                 <button onClick={() => setShowSettings(false)} className="p-2 hover:bg-medical-700 rounded-full transition-colors">
                                     <X className="w-6 h-6 text-white" />
@@ -732,22 +742,22 @@ const Dashboard = () => {
 
                             <form onSubmit={handleSaveSettings} className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
                                 <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Patients / Hour</label>
+                                    <div className="text-left rtl:text-right">
+                                        <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">{t('dashboard.patients_hour')}</label>
                                         <select
                                             className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-medical-500 outline-none"
                                             value={60 / settings.intervalMinutes}
                                             onChange={(e) => setSettings({ ...settings, intervalMinutes: 60 / parseInt(e.target.value) })}
                                         >
-                                            <option value="2">2 (Every 30m)</option>
-                                            <option value="3">3 (Every 20m)</option>
-                                            <option value="4">4 (Every 15m)</option>
-                                            <option value="6">6 (Every 10m)</option>
-                                            <option value="12">12 (Every 5m)</option>
+                                            <option value="2">2 ({t('booking.status.minutes').split(' ')[0]} 30)</option>
+                                            <option value="3">3 ({t('booking.status.minutes').split(' ')[0]} 20)</option>
+                                            <option value="4">4 ({t('booking.status.minutes').split(' ')[0]} 15)</option>
+                                            <option value="6">6 ({t('booking.status.minutes').split(' ')[0]} 10)</option>
+                                            <option value="12">12 ({t('booking.status.minutes').split(' ')[0]} 5)</option>
                                         </select>
                                     </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Daily Capacity</label>
+                                    <div className="text-left rtl:text-right">
+                                        <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">{t('dashboard.daily_cap')}</label>
                                         <input
                                             type="number"
                                             className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-medical-500 outline-none"
@@ -757,8 +767,8 @@ const Dashboard = () => {
                                     </div>
                                 </div>
 
-                                <div className="space-y-3">
-                                    <label className="block text-xs font-bold text-slate-500 uppercase">Weekly Schedule & Hours</label>
+                                <div className="space-y-3 text-left rtl:text-right">
+                                    <label className="block text-xs font-bold text-slate-500 uppercase">{t('dashboard.weekly_schedule')}</label>
                                     {Object.entries(settings.dailySchedules).map(([day, schedule]) => (
                                         <div key={day} className={`p-3 rounded-xl border transition-all flex items-center gap-4 ${schedule.isOpen ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-50 border-slate-100 opacity-60'}`}>
                                             <button
@@ -773,10 +783,10 @@ const Dashboard = () => {
                                                 <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${schedule.isOpen ? 'right-1' : 'left-1'}`} />
                                             </button>
 
-                                            <span className="font-bold text-slate-700 w-20">{day}</span>
+                                            <span className="font-bold text-slate-700 w-20 rtl:text-right">{t(`days.${day.toLowerCase()}`)}</span>
 
                                             {schedule.isOpen ? (
-                                                <div className="flex-grow flex items-center gap-2">
+                                                <div className="flex-grow flex items-center gap-2 rtl:flex-row-reverse">
                                                     <input
                                                         type="time"
                                                         className="flex-1 px-2 py-1 border border-slate-200 rounded text-xs outline-none"
@@ -787,7 +797,7 @@ const Dashboard = () => {
                                                             setSettings({ ...settings, dailySchedules: newSchedules });
                                                         }}
                                                     />
-                                                    <span className="text-slate-400">to</span>
+                                                    <span className="text-slate-400">{t('dashboard.to')}</span>
                                                     <input
                                                         type="time"
                                                         className="flex-1 px-2 py-1 border border-slate-200 rounded text-xs outline-none"
@@ -800,25 +810,25 @@ const Dashboard = () => {
                                                     />
                                                 </div>
                                             ) : (
-                                                <span className="text-slate-400 text-xs italic">Clinic Closed</span>
+                                                <span className="text-slate-400 text-xs italic">{t('booking.schedule.closed')}</span>
                                             )}
                                         </div>
                                     ))}
                                 </div>
 
-                                <div className="space-y-4 pt-4 border-t border-slate-100">
-                                    <label className="block text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
-                                        <Info className="w-3 h-3" /> Clinic Public Info
+                                <div className="space-y-4 pt-4 border-t border-slate-100 text-left rtl:text-right">
+                                    <label className="block text-xs font-bold text-slate-500 uppercase flex items-center gap-2 rtl:flex-row-reverse rtl:justify-end">
+                                        <Info className="w-3 h-3" /> {t('dashboard.clinic_info')}
                                     </label>
 
                                     <div>
-                                        <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Clinic Address</label>
+                                        <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase">{t('booking.schedule.location')}</label>
                                         <div className="relative">
-                                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 rtl:right-3 rtl:left-auto" />
                                             <input
                                                 type="text"
                                                 placeholder="Street Name, Building, Floor..."
-                                                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm transition-all focus:ring-2 focus:ring-medical-500 outline-none"
+                                                className="w-full pl-10 pr-4 rtl:pr-10 rtl:pl-4 py-2 border border-slate-200 rounded-lg text-sm transition-all focus:ring-2 focus:ring-medical-500 outline-none"
                                                 value={settings.clinicAddress}
                                                 onChange={(e) => setSettings({ ...settings, clinicAddress: e.target.value })}
                                             />
@@ -826,28 +836,28 @@ const Dashboard = () => {
                                     </div>
 
                                     <div>
-                                        <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Clinic Phone (Public)</label>
+                                        <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase">{t('booking.schedule.phone')}</label>
                                         <div className="relative">
-                                            <PhoneCall className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                            <PhoneCall className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 rtl:right-3 rtl:left-auto" />
                                             <input
                                                 type="text"
                                                 placeholder="+20 1xx xxx xxxx"
-                                                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm transition-all focus:ring-2 focus:ring-medical-500 outline-none"
+                                                className="w-full pl-10 pr-4 rtl:pr-10 rtl:pl-4 py-2 border border-slate-200 rounded-lg text-sm transition-all focus:ring-2 focus:ring-medical-500 outline-none"
                                                 value={settings.clinicPhone}
                                                 onChange={(e) => setSettings({ ...settings, clinicPhone: e.target.value })}
                                             />
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase flex items-center justify-between">
-                                            <span>Google Maps IFrame Link</span>
-                                            <a href="https://www.google.com/maps" target="_blank" rel="noreferrer" className="text-medical-600 hover:underline lowercase font-normal italic">Get Link</a>
+                                    <div className="text-left rtl:text-right">
+                                        <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase flex items-center justify-between rtl:flex-row-reverse">
+                                            <span>{t('dashboard.map_link')}</span>
+                                            <a href="https://www.google.com/maps" target="_blank" rel="noreferrer" className="text-medical-600 hover:underline lowercase font-normal italic">{t('dashboard.get_link')}</a>
                                         </label>
                                         <textarea
-                                            placeholder='Paste the <iframe src="..."> here...'
+                                            placeholder={t('dashboard.map_placeholder')}
                                             rows={2}
-                                            className="w-full px-4 py-2 border border-slate-200 rounded-lg text-xs transition-all focus:ring-2 focus:ring-medical-500 outline-none resize-none"
+                                            className="w-full px-4 py-2 border border-slate-200 rounded-lg text-xs transition-all focus:ring-2 focus:ring-medical-500 outline-none resize-none rtl:text-right"
                                             value={settings.mapIframeUrl}
                                             onChange={(e) => {
                                                 // Minimal extraction if they paste the whole iframe tag
@@ -858,23 +868,23 @@ const Dashboard = () => {
                                                 setSettings({ ...settings, mapIframeUrl: val });
                                             }}
                                         />
-                                        <p className="text-[9px] text-slate-400 mt-1">Tip: Share {'>'} Embed a map {'>'} Copy HTML (only the URL inside src="")</p>
+                                        <p className="text-[9px] text-slate-400 mt-1">{t('dashboard.map_hint')}</p>
                                     </div>
                                 </div>
 
-                                <div className="pt-4 border-t border-slate-100 flex gap-3">
+                                <div className="pt-4 border-t border-slate-100 flex gap-3 rtl:flex-row-reverse">
                                     <button
                                         type="button"
                                         onClick={() => setShowSettings(false)}
                                         className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200"
                                     >
-                                        Cancel
+                                        {t('labels.cancel')}
                                     </button>
                                     <button
                                         type="submit"
                                         className="flex-1 py-3 bg-medical-600 text-white rounded-xl font-bold hover:bg-medical-700 shadow-lg shadow-medical-200 flex items-center justify-center gap-2"
                                     >
-                                        <Save className="w-4 h-4" /> Save Settings
+                                        <Save className="w-4 h-4" /> {t('labels.save')}
                                     </button>
                                 </div>
                             </form>

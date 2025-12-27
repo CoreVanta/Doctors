@@ -1,0 +1,162 @@
+{
+    "nav": {
+        "live_queue": "Live Queue",
+        "book_now": "Book Now",
+        "doctor_portal": "Doctor Portal"
+    },
+    "home": {
+        "hero_title": "Modern Healthcare",
+        "hero_subtitle": "Simplified",
+        "hero_desc": "Skip the waiting room. Book your appointment online, track your queue status in real-time, and get notified when it's your turn.",
+        "start_booking": "Start Booking",
+        "view_live_queue": "View Live Queue",
+        "our_services": "Our Services",
+        "pricing_desc": "Transparent pricing for all your medical needs.",
+        "footer_copy": "© 2025 MedicoQueue. All rights reserved. Professional Medical Management System.",
+        "services": {
+            "gen_con": "General Consultation",
+            "gen_con_desc": "Comprehensive health check and prescription.",
+            "follow_up": "Follow-up Visit",
+            "follow_up_desc": "Review of previous conditions and treatment progress.",
+            "special": "Special Procedures",
+            "special_desc": "Minor surgical procedures and specialized tests.",
+            "renewal": "Prescription Renewal",
+            "renewal_desc": "Quick renewal of ongoing medications."
+        },
+        "details": "Details",
+        "from": "From"
+    },
+    "booking": {
+        "title": "Book an Appointment",
+        "subtitle": "Quick and easy booking in less than a minute.",
+        "patient_info": "Patient Information",
+        "placeholder_name": "Enter your full name",
+        "placeholder_phone": "+20 1xx xxx xxxx",
+        "date_label": "Preferred Date",
+        "date_hint": "Select a date to check availability and clinic hours.",
+        "submit_btn": "Confirm My Appointment",
+        "processing": "Processing...",
+        "status": {
+            "title": "Live Queue Status",
+            "desc": "Real-time availability and estimated waiting times for today.",
+            "patients_today": "Patients Today",
+            "estimated_wait": "Estimated Wait",
+            "total": "Total",
+            "minutes": "Minutes"
+        },
+        "schedule": {
+            "title": "Clinic Schedule",
+            "open": "Open Now",
+            "closed": "Closed",
+            "hours": "Office Hours",
+            "location": "Location",
+            "phone": "Phone"
+        },
+        "validation": {
+            "closed_day": "Sorry, the clinic is closed on {{day}}s.",
+            "capacity": "Sorry, we have reached the maximum number of bookings for this day.",
+            "slow_db": "The connection to the database is slow. Please refresh the page and try again.",
+            "timeout": "The connection to the database is slow. Please refresh the page and try again.",
+            "hours_exceeded": "Sorry, we cannot accept more bookings for this day as it exceeds clinic working hours.",
+            "db_error": "Database Error"
+        },
+        "success": {
+            "title": "Booking Confirmed!",
+            "desc": "Your appointment has been successfully scheduled.",
+            "queue_number": "Your Queue Number",
+            "wait_time": "Estimated Wait",
+            "time_desc": "Please arrive 10 minutes before your appointment.",
+            "back_home": "Back to Home"
+        }
+    },
+    "live_queue": {
+        "title": "Live Queue Updates",
+        "subtitle": "Track the current clinic status in real-time.",
+        "now_serving": "Now Serving",
+        "waiting": "Waiting",
+        "completed": "Completed",
+        "upcoming": "Upcoming Patients",
+        "up_next": "UP NEXT",
+        "no_pending": "No pending appointments for today.",
+        "scheduled_for": "Scheduled for",
+        "empty": "No bookings for today.",
+        "status": {
+            "pending": "Waiting",
+            "calling": "Calling",
+            "completed": "Completed"
+        }
+    },
+    "login": {
+        "title": "Doctor Portal",
+        "subtitle": "Sign in to manage your clinic and patients.",
+        "email_label": "Email Address",
+        "pass_label": "Password",
+        "sign_in": "Sign In",
+        "signing_in": "Signing in...",
+        "note": "Note: This portal is for authorized medical staff only.",
+        "error": "Invalid email or password. Please try again."
+    },
+    "dashboard": {
+        "title": "Patient Consultation",
+        "settings_btn": "Clinic Settings",
+        "call_next": "Call Next Patient",
+        "mark_completed": "Mark Completed",
+        "notes_title": "Clinical Notes & Diagnosis",
+        "notes_placeholder": "Start typing examination details, diagnosis, and treatment plan...",
+        "autosave": "Autosave Enabled",
+        "records_title": "Patient Records & Media",
+        "upload_btn": "Upload File",
+        "uploading": "Uploading...",
+        "drive_link_label": "Google Drive Folder/File Link",
+        "drive_link_placeholder": "Paste folder link for persistent storage...",
+        "no_records": "No records uploaded yet. Upload a prescription or test result.",
+        "next_app": "Next Appointment",
+        "quick_actions": "Quick Actions",
+        "med_history": "Medical History",
+        "print_pres": "Print Prescription",
+        "save_draft": "Save Case Draft",
+        "complete_con": "Complete Case",
+        "no_patient": "Select a patient from the queue to start consultation.",
+        "waiting_list": "Waiting List",
+        "no_waiting": "No patients waiting.",
+        "no_history": "No previous records found for this patient.",
+        "no_notes": "No clinical notes provided.",
+        "open_file": "Open full file",
+        "show_preview": "Show Preview",
+        "hide_preview": "Hide Preview",
+        "map_link": "Google Maps IFrame Link",
+        "get_link": "Get Link",
+        "map_placeholder": "Paste the <iframe src=\"...\"> here...",
+        "map_hint": "Tip: Share > Embed a map > Copy HTML (only the URL inside src=\"\")",
+        "patients_hour": "Patients / Hour",
+        "daily_cap": "Daily Capacity",
+        "weekly_schedule": "Weekly Schedule & Hours",
+        "to": "to",
+        "clinic_info": "Clinic Public Info",
+        "exit_session": "Exit Session",
+        "consultation_saved": "Consultation completed and records saved permanentely.",
+        "records_found": "Previous Records",
+        "print_hint": "Generate & Print",
+        "sidebar": {
+            "queue": "Queue",
+            "serving": "Now Serving",
+            "logout": "Logout"
+        }
+    },
+    "days": {
+        "monday": "Monday",
+        "tuesday": "Tuesday",
+        "wednesday": "Wednesday",
+        "thursday": "Thursday",
+        "friday": "Friday",
+        "saturday": "Saturday",
+        "sunday": "Sunday"
+    },
+    "labels": {
+        "cancel": "Cancel",
+        "save": "Save",
+        "full_name": "Full Name",
+        "whatsapp_number": "WhatsApp Number",
+        "preferred_date": "Preferred Date"
+    }
+}

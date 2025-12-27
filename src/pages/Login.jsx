@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import { auth, db } from '../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 import { Lock, Mail, Activity, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Login = () => {
+    const { t } = useTranslation();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -28,15 +31,18 @@ const Login = () => {
 
     return (
         <div className="min-h-screen bg-medical-50 flex flex-col justify-center py-12 px-6">
+            <div className="absolute top-10 right-10 z-10">
+                <LanguageSwitcher />
+            </div>
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 <div className="flex justify-center mb-6">
                     <Activity className="text-medical-600 w-12 h-12" />
                 </div>
                 <h2 className="text-center text-3xl font-extrabold text-slate-900">
-                    Doctor Portal
+                    {t('login.title')}
                 </h2>
                 <p className="mt-2 text-center text-sm text-slate-600">
-                    Sign in to manage your clinic and patients.
+                    {t('login.subtitle')}
                 </p>
             </div>
 
@@ -55,17 +61,17 @@ const Login = () => {
                         )}
 
                         <div>
-                            <label htmlFor="loginEmail" className="block text-sm font-medium text-slate-700 mb-1">
-                                Email Address
+                            <label htmlFor="loginEmail" className="block text-sm font-medium text-slate-700 mb-1 rtl:text-right">
+                                {t('login.email_label')}
                             </label>
                             <div className="relative">
-                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 rtl:right-3 rtl:left-auto" />
                                 <input
                                     id="loginEmail"
                                     name="email"
                                     type="email"
                                     required
-                                    className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-medical-500 focus:border-transparent transition-all outline-none"
+                                    className="w-full pl-10 pr-4 rtl:pr-10 rtl:pl-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-medical-500 focus:border-transparent transition-all outline-none"
                                     placeholder="doctor@example.com"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
@@ -74,17 +80,17 @@ const Login = () => {
                         </div>
 
                         <div>
-                            <label htmlFor="loginPassword" className="block text-sm font-medium text-slate-700 mb-1">
-                                Password
+                            <label htmlFor="loginPassword" className="block text-sm font-medium text-slate-700 mb-1 rtl:text-right">
+                                {t('login.pass_label')}
                             </label>
                             <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 rtl:right-3 rtl:left-auto" />
                                 <input
                                     id="loginPassword"
                                     name="password"
                                     type="password"
                                     required
-                                    className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-medical-500 focus:border-transparent transition-all outline-none"
+                                    className="w-full pl-10 pr-4 rtl:pr-10 rtl:pl-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-medical-500 focus:border-transparent transition-all outline-none"
                                     placeholder="••••••••"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
@@ -97,13 +103,13 @@ const Login = () => {
                             disabled={loading}
                             className="w-full btn-primary py-3 text-lg"
                         >
-                            {loading ? 'Signing in...' : 'Sign In'}
+                            {loading ? t('login.signing_in') : t('login.sign_in')}
                         </button>
                     </form>
 
                     <div className="mt-6 text-center">
                         <p className="text-xs text-slate-500">
-                            Note: This portal is for authorized medical staff only.
+                            {t('login.note')}
                         </p>
                     </div>
                 </div>
