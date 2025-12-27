@@ -18,7 +18,7 @@ const PrivateRoute = ({ children, doctorOnly = false }) => {
 function App() {
   return (
     <AuthProvider>
-      <Router>
+      <Router basename="/Doctors">
         <div className="min-h-screen bg-slate-50">
           <Routes>
             <Route path="/" element={<Home />} />
