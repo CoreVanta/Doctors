@@ -4,8 +4,10 @@ import { collection, addDoc, query, where, getDocs, orderBy, limit, onSnapshot }
 import { Calendar, User, Phone, Clock, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, addMinutes } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 
 const Booking = () => {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({ name: '', phone: '', date: format(new Date(), 'yyyy-MM-dd') });
     const [loading, setLoading] = useState(false);
     const [bookingConfirmed, setBookingConfirmed] = useState(null);
@@ -27,18 +29,9 @@ const Booking = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            // Get the next queue number
-            const q = query(
-                collection(db, 'bookings'),
-                where('date', '==', formData.date),
-                orderBy('queueNumber', 'desc'),
-                limit(1)
-            );
-            const snapshot = await getDocs(q);
-            let nextQueueNumber = 1;
-            if (!snapshot.empty) {
-                nextQueueNumber = snapshot.docs[0].data().queueNumber + 1;
-            }
+            // Using a simpler approach to avoid Firestore Index requirement
+            // We use the count from our live stats + 1
+            const nextQueueNumber = stats.totalBooked + 1;
 
             const bookingData = {
                 ...formData,
@@ -52,9 +45,10 @@ const Booking = () => {
             setBookingConfirmed({ id: docRef.id, ...bookingData });
         } catch (error) {
             console.error("Error adding booking: ", error);
-            alert("Error booking appointment. Please try again.");
+            alert("Error: " + error.message);
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
     if (bookingConfirmed) {
@@ -91,7 +85,7 @@ const Booking = () => {
                     </p>
 
                     <button
-                        onClick={() => window.location.href = '/'}
+                        onClick={() => navigate('/')}
                         className="w-full btn-primary"
                     >
                         Back to Home
