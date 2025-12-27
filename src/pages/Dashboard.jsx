@@ -25,12 +25,12 @@ const formatDrivePreview = (url, forceIframe = false) => {
 
     if (!fileId) return url;
 
-    // Use THUMBNAIL for images (safer, no 403)
+    // Use THUMBNAIL for images (safer, avoids 403 errors in console)
     if (!forceIframe) {
         return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
     }
 
-    // Use PREVIEW for others (PDFs)
+    // Use PREVIEW for others (PDFs) - this is what causes 403 if not logged in
     return `https://drive.google.com/file/d/${fileId}/preview`;
 };
 
@@ -377,23 +377,26 @@ const Dashboard = () => {
                                         {driveLink && (
                                             <div className="mt-4 border border-slate-200 rounded-xl overflow-hidden min-h-[200px] bg-slate-100 relative group flex items-center justify-center">
                                                 {driveLink.includes('drive.google.com') ? (
-                                                    <>
+                                                    <div className="w-full">
                                                         <img
                                                             src={formatDrivePreview(driveLink)}
-                                                            className="max-h-[400px] w-auto object-contain"
+                                                            className="max-h-[400px] w-auto object-contain mx-auto"
                                                             alt="Patient Record Preview"
                                                             onError={(e) => {
-                                                                // If thumbnail fails (e.g. PDF), fallback to iframe preview
+                                                                // If thumbnail fails (e.g. PDF), show a 'View Document' button instead of automatic iframe
                                                                 e.target.style.display = 'none';
-                                                                e.target.nextSibling.style.display = 'block';
+                                                                e.target.parentElement.innerHTML = `
+                                                                    <div class="p-12 text-center">
+                                                                        <div class="bg-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm">
+                                                                            <svg class="w-6 h-6 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                                                        </div>
+                                                                        <p class="text-xs text-slate-500 font-bold mb-4">PDF Document Detected</p>
+                                                                        <a href="${driveLink}" target="_blank" rel="noopener noreferrer" class="btn-primary py-2 px-6 text-xs inline-block">Open PDF in New Tab</a>
+                                                                    </div>
+                                                                `;
                                                             }}
                                                         />
-                                                        <iframe
-                                                            src={formatDrivePreview(driveLink, true)}
-                                                            className="w-full h-[400px] hidden"
-                                                            title="Drive PDF Preview"
-                                                        ></iframe>
-                                                    </>
+                                                    </div>
                                                 ) : (
                                                     <p className="text-xs text-slate-400">Preview not available for this link type</p>
                                                 )}
