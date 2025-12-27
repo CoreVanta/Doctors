@@ -13,18 +13,25 @@ import { format } from 'date-fns';
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyK_DSjFavVCsE0DH49qxke-NVR8Nq_nFP3saZD86VKGIQ1TDPxIF3WTmwz995Oa46tGw/exec';
 
 // Helper for Google Drive Preview Links
-const formatDrivePreview = (url) => {
+const formatDrivePreview = (url, forceIframe = false) => {
     if (!url || !url.includes('drive.google.com')) return url;
-    // Handle various formats to ensure /preview
+
+    let fileId = '';
     if (url.includes('/file/d/')) {
-        const fileId = url.split('/file/d/')[1].split('/')[0];
-        return `https://drive.google.com/file/d/${fileId}/preview`;
+        fileId = url.split('/file/d/')[1].split('/')[0];
+    } else if (url.includes('id=')) {
+        fileId = url.split('id=')[1].split('&')[0];
     }
-    if (url.includes('id=')) {
-        const fileId = url.split('id=')[1].split('&')[0];
-        return `https://drive.google.com/file/d/${fileId}/preview`;
+
+    if (!fileId) return url;
+
+    // Use THUMBNAIL for images (safer, no 403)
+    if (!forceIframe) {
+        return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
     }
-    return url;
+
+    // Use PREVIEW for others (PDFs)
+    return `https://drive.google.com/file/d/${fileId}/preview`;
 };
 
 const Dashboard = () => {
@@ -367,17 +374,32 @@ const Dashboard = () => {
                                         {isUploading && <p className="text-[10px] text-medical-600 mt-1 animate-pulse font-bold">Uploading to Drive...</p>}
 
                                         {/* Embedded Preview */}
-                                        {driveLink && driveLink.includes('drive.google.com') && (
-                                            <div className="mt-4 border border-slate-200 rounded-xl overflow-hidden aspect-video bg-slate-100 relative group">
-                                                <iframe
-                                                    src={formatDrivePreview(driveLink)}
-                                                    className="w-full h-full"
-                                                    title="Drive Preview"
-                                                    allow="autoplay"
-                                                ></iframe>
+                                        {driveLink && (
+                                            <div className="mt-4 border border-slate-200 rounded-xl overflow-hidden min-h-[200px] bg-slate-100 relative group flex items-center justify-center">
+                                                {driveLink.includes('drive.google.com') ? (
+                                                    <>
+                                                        <img
+                                                            src={formatDrivePreview(driveLink)}
+                                                            className="max-h-[400px] w-auto object-contain"
+                                                            alt="Patient Record Preview"
+                                                            onError={(e) => {
+                                                                // If thumbnail fails (e.g. PDF), fallback to iframe preview
+                                                                e.target.style.display = 'none';
+                                                                e.target.nextSibling.style.display = 'block';
+                                                            }}
+                                                        />
+                                                        <iframe
+                                                            src={formatDrivePreview(driveLink, true)}
+                                                            className="w-full h-[400px] hidden"
+                                                            title="Drive PDF Preview"
+                                                        ></iframe>
+                                                    </>
+                                                ) : (
+                                                    <p className="text-xs text-slate-400">Preview not available for this link type</p>
+                                                )}
                                                 <div className="absolute inset-x-0 bottom-0 bg-slate-900/60 p-2 opacity-0 group-hover:opacity-100 transition-opacity flex justify-between items-center">
-                                                    <span className="text-[10px] text-white">Live Preview from Drive</span>
-                                                    <a href={driveLink} target="_blank" rel="noopener noreferrer" className="text-[10px] text-medical-200 font-bold hover:underline">Open Full Tab</a>
+                                                    <span className="text-[10px] text-white font-medium">Record Preview</span>
+                                                    <a href={driveLink} target="_blank" rel="noopener noreferrer" className="text-[10px] text-medical-200 font-bold hover:underline">Open Original</a>
                                                 </div>
                                             </div>
                                         )}
@@ -510,12 +532,20 @@ const Dashboard = () => {
                                                     </div>
 
                                                     {visibleRecordId === item.id && item.googleDriveLink.includes('drive.google.com') && (
-                                                        <div className="border border-slate-200 rounded-lg overflow-hidden aspect-video bg-white shadow-inner">
-                                                            <iframe
+                                                        <div className="border border-slate-200 rounded-lg overflow-hidden min-h-[150px] bg-white shadow-inner flex items-center justify-center">
+                                                            <img
                                                                 src={formatDrivePreview(item.googleDriveLink)}
-                                                                className="w-full h-full border-0"
-                                                                title="History Preview"
-                                                                allow="autoplay"
+                                                                className="max-h-[300px] w-auto object-contain"
+                                                                alt="History Record"
+                                                                onError={(e) => {
+                                                                    e.target.style.display = 'none';
+                                                                    e.target.nextSibling.style.display = 'block';
+                                                                }}
+                                                            />
+                                                            <iframe
+                                                                src={formatDrivePreview(item.googleDriveLink, true)}
+                                                                className="w-full h-[300px] hidden"
+                                                                title="History PDF Preview"
                                                             ></iframe>
                                                         </div>
                                                     )}
