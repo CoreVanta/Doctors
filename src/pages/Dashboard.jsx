@@ -46,11 +46,17 @@ const Dashboard = () => {
     const [isUploading, setIsUploading] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
     const [settings, setSettings] = useState({
-        startTime: '09:00',
-        endTime: '17:00',
         intervalMinutes: 10,
         dailyLimit: 20,
-        holidays: ['Friday', 'Saturday']
+        dailySchedules: {
+            'Monday': { isOpen: true, startTime: '09:00', endTime: '17:00' },
+            'Tuesday': { isOpen: true, startTime: '09:00', endTime: '17:00' },
+            'Wednesday': { isOpen: true, startTime: '09:00', endTime: '17:00' },
+            'Thursday': { isOpen: true, startTime: '09:00', endTime: '17:00' },
+            'Friday': { isOpen: false, startTime: '09:00', endTime: '17:00' },
+            'Saturday': { isOpen: false, startTime: '09:00', endTime: '17:00' },
+            'Sunday': { isOpen: true, startTime: '09:00', endTime: '17:00' }
+        }
     });
 
     const todaysDate = format(new Date(), 'yyyy-MM-dd');
@@ -62,9 +68,9 @@ const Dashboard = () => {
             const docSnap = await getDocs(query(collection(db, 'settings'), where('id', '==', 'clinic_settings')));
             // Using getDocs for simplicity if id is used, but ideally use direct doc()
             // Let's use direct doc
-            onSnapshot(doc(db, 'settings', 'clinic_settings'), (doc) => {
-                if (doc.exists()) {
-                    setSettings(doc.data());
+            onSnapshot(doc(db, 'settings', 'clinic_settings'), (snapshot) => {
+                if (snapshot.exists()) {
+                    setSettings(prev => ({ ...prev, ...snapshot.data() }));
                 }
             });
         };
@@ -656,35 +662,8 @@ const Dashboard = () => {
                                 </button>
                             </div>
 
-                            <form onSubmit={handleSaveSettings} className="p-6 space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Work Starts</label>
-                                        <div className="relative">
-                                            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                            <input
-                                                type="time"
-                                                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-medical-500 outline-none"
-                                                value={settings.startTime}
-                                                onChange={(e) => setSettings({ ...settings, startTime: e.target.value })}
-                                            />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Work Ends</label>
-                                        <div className="relative">
-                                            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                            <input
-                                                type="time"
-                                                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-medical-500 outline-none"
-                                                value={settings.endTime}
-                                                onChange={(e) => setSettings({ ...settings, endTime: e.target.value })}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
+                            <form onSubmit={handleSaveSettings} className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+                                <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
                                     <div>
                                         <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Patients / Hour</label>
                                         <select
@@ -710,28 +689,53 @@ const Dashboard = () => {
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Weekly Holidays</label>
-                                    <div className="grid grid-cols-4 gap-2">
-                                        {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
+                                <div className="space-y-3">
+                                    <label className="block text-xs font-bold text-slate-500 uppercase">Weekly Schedule & Hours</label>
+                                    {Object.entries(settings.dailySchedules).map(([day, schedule]) => (
+                                        <div key={day} className={`p-3 rounded-xl border transition-all flex items-center gap-4 ${schedule.isOpen ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-50 border-slate-100 opacity-60'}`}>
                                             <button
-                                                key={day}
                                                 type="button"
                                                 onClick={() => {
-                                                    const newHolidays = settings.holidays.includes(day)
-                                                        ? settings.holidays.filter(h => h !== day)
-                                                        : [...settings.holidays, day];
-                                                    setSettings({ ...settings, holidays: newHolidays });
+                                                    const newSchedules = { ...settings.dailySchedules };
+                                                    newSchedules[day].isOpen = !newSchedules[day].isOpen;
+                                                    setSettings({ ...settings, dailySchedules: newSchedules });
                                                 }}
-                                                className={`px-2 py-1.5 text-[10px] font-bold rounded-lg border transition-all ${settings.holidays.includes(day)
-                                                    ? 'bg-red-50 border-red-200 text-red-600'
-                                                    : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-medical-200'
-                                                    }`}
+                                                className={`w-12 h-6 rounded-full relative transition-colors ${schedule.isOpen ? 'bg-medical-500' : 'bg-slate-300'}`}
                                             >
-                                                {day.substring(0, 3)}
+                                                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${schedule.isOpen ? 'right-1' : 'left-1'}`} />
                                             </button>
-                                        ))}
-                                    </div>
+
+                                            <span className="font-bold text-slate-700 w-20">{day}</span>
+
+                                            {schedule.isOpen ? (
+                                                <div className="flex-grow flex items-center gap-2">
+                                                    <input
+                                                        type="time"
+                                                        className="flex-1 px-2 py-1 border border-slate-200 rounded text-xs outline-none"
+                                                        value={schedule.startTime}
+                                                        onChange={(e) => {
+                                                            const newSchedules = { ...settings.dailySchedules };
+                                                            newSchedules[day].startTime = e.target.value;
+                                                            setSettings({ ...settings, dailySchedules: newSchedules });
+                                                        }}
+                                                    />
+                                                    <span className="text-slate-400">to</span>
+                                                    <input
+                                                        type="time"
+                                                        className="flex-1 px-2 py-1 border border-slate-200 rounded text-xs outline-none"
+                                                        value={schedule.endTime}
+                                                        onChange={(e) => {
+                                                            const newSchedules = { ...settings.dailySchedules };
+                                                            newSchedules[day].endTime = e.target.value;
+                                                            setSettings({ ...settings, dailySchedules: newSchedules });
+                                                        }}
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <span className="text-slate-400 text-xs italic">Clinic Closed</span>
+                                            )}
+                                        </div>
+                                    ))}
                                 </div>
 
                                 <div className="pt-4 border-t border-slate-100 flex gap-3">

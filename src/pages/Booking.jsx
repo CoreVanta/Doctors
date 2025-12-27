@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebase';
-import { collection, addDoc, query, where, getDocs, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, onSnapshot, serverTimestamp, doc } from 'firebase/firestore';
 import { Calendar, User, Phone, Clock, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, addMinutes } from 'date-fns';
@@ -12,11 +12,17 @@ const Booking = () => {
     const [loading, setLoading] = useState(false);
     const [bookingConfirmed, setBookingConfirmed] = useState(null);
     const [settings, setSettings] = useState({
-        startTime: '09:00',
-        endTime: '17:00',
         intervalMinutes: 10,
         dailyLimit: 20,
-        holidays: ['Friday', 'Saturday']
+        dailySchedules: {
+            'Monday': { isOpen: true, startTime: '09:00', endTime: '17:00' },
+            'Tuesday': { isOpen: true, startTime: '09:00', endTime: '17:00' },
+            'Wednesday': { isOpen: true, startTime: '09:00', endTime: '17:00' },
+            'Thursday': { isOpen: true, startTime: '09:00', endTime: '17:00' },
+            'Friday': { isOpen: false, startTime: '09:00', endTime: '17:00' },
+            'Saturday': { isOpen: false, startTime: '09:00', endTime: '17:00' },
+            'Sunday': { isOpen: true, startTime: '09:00', endTime: '17:00' }
+        }
     });
     const [stats, setStats] = useState({ totalBooked: 0, estimatedWait: 0 });
 
@@ -26,9 +32,9 @@ const Booking = () => {
             const docRef = doc(db, 'settings', 'clinic_settings');
             const docSnap = await getDocs(query(collection(db, 'settings'), where('id', '==', 'clinic_settings')));
             // Direct doc fetch for simplicity
-            onSnapshot(doc(db, 'settings', 'clinic_settings'), (doc) => {
-                if (doc.exists()) {
-                    setSettings(doc.data());
+            onSnapshot(doc(db, 'settings', 'clinic_settings'), (snapshot) => {
+                if (snapshot.exists()) {
+                    setSettings(prev => ({ ...prev, ...snapshot.data() }));
                 }
             });
         };
@@ -62,9 +68,11 @@ const Booking = () => {
         }, 15000);
 
         try {
-            // Validate Holiday
+            // Validate Day Schedule
             const dayName = format(new Date(formData.date), 'EEEE');
-            if (settings.holidays.includes(dayName)) {
+            const schedule = settings.dailySchedules?.[dayName];
+
+            if (schedule && !schedule.isOpen) {
                 alert(`Sorry, the clinic is closed on ${dayName}s.`);
                 setLoading(false);
                 return;
@@ -81,13 +89,22 @@ const Booking = () => {
             const nextQueueNumber = (stats.totalBooked || 0) + 1;
 
             // Calculate Dynamic Estimated Time
-            // Start from clinic startTime OR current time if booking for today
-            let baseTime = new Date(`${formData.date}T${settings.startTime}`);
+            const dailyStart = schedule?.startTime || '09:00';
+            let baseTime = new Date(`${formData.date}T${dailyStart}`);
             const now = new Date();
+
             if (formData.date === format(now, 'yyyy-MM-dd') && now > baseTime) {
                 baseTime = now;
             }
             const estimatedTime = format(addMinutes(baseTime, stats.totalBooked * settings.intervalMinutes), 'HH:mm');
+            const dailyEnd = schedule?.endTime || '17:00';
+
+            // Check if estimated time exceeds clinic hours
+            if (estimatedTime > dailyEnd) {
+                alert("Sorry, we cannot accept more bookings for this day as it exceeds clinic working hours.");
+                setLoading(false);
+                return;
+            }
 
             const bookingData = {
                 name: String(formData.name),
@@ -191,12 +208,18 @@ const Booking = () => {
                             </h4>
                             <div className="text-sm text-slate-600 space-y-2">
                                 <p className="flex justify-between">
-                                    <span className="font-medium text-slate-400 uppercase tracking-tighter text-[10px]">Hours</span>
-                                    <span>{settings.startTime} - {settings.endTime}</span>
+                                    <span className="font-medium text-slate-400 uppercase tracking-tighter text-[10px]">Today's Status</span>
+                                    <span className={settings.dailySchedules?.[format(new Date(formData.date), 'EEEE')]?.isOpen ? 'text-green-600 font-bold' : 'text-red-500 font-bold'}>
+                                        {settings.dailySchedules?.[format(new Date(formData.date), 'EEEE')]?.isOpen ? 'Open' : 'Closed'}
+                                    </span>
                                 </p>
                                 <p className="flex justify-between border-t border-slate-50 pt-2">
-                                    <span className="font-medium text-slate-400 uppercase tracking-tighter text-[10px]">Holidays</span>
-                                    <span className="text-red-400">{settings.holidays.join(', ')}</span>
+                                    <span className="font-medium text-slate-400 uppercase tracking-tighter text-[10px]">Working Hours</span>
+                                    <span>
+                                        {settings.dailySchedules?.[format(new Date(formData.date), 'EEEE')]?.isOpen
+                                            ? `${settings.dailySchedules[format(new Date(formData.date), 'EEEE')].startTime} - ${settings.dailySchedules[format(new Date(formData.date), 'EEEE')].endTime}`
+                                            : '---'}
+                                    </span>
                                 </p>
                                 <p className="flex justify-between border-t border-slate-50 pt-2">
                                     <span className="font-medium text-slate-400 uppercase tracking-tighter text-[10px]">Daily Limit</span>
