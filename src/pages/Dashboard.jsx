@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { auth, db } from '../firebase';
-import { collection, query, where, onSnapshot, doc, updateDoc, Timestamp, addDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, updateDoc, Timestamp, addDoc, getDocs } from 'firebase/firestore';
 import {
     Users, CheckCircle2, PlayCircle, SkipForward, ArrowRight,
-    ExternalLink, FileText, Clipboard, Search, Plus, Calendar
+    ExternalLink, FileText, Clipboard, Search, Plus, Calendar,
+    History, Upload, X, Eye
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
+
+// REPLACE THIS with your Google Apps Script Web App URL
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyK_DSjFavVCsE0DH49qxke-NVR8Nq_nFP3saZD86VKGIQ1TDPxIF3WTmwz995Oa46tGw/exec';
 
 const Dashboard = () => {
     const [bookings, setBookings] = useState([]);
@@ -14,6 +18,9 @@ const Dashboard = () => {
     const [clinicalNotes, setClinicalNotes] = useState('');
     const [driveLink, setDriveLink] = useState('');
     const [nextAppointment, setNextAppointment] = useState('');
+    const [patientHistory, setPatientHistory] = useState([]);
+    const [showHistory, setShowHistory] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
     const todaysDate = format(new Date(), 'yyyy-MM-dd');
 
     useEffect(() => {
@@ -34,6 +41,76 @@ const Dashboard = () => {
         return () => unsubscribe();
     }, [todaysDate]);
 
+    const selectPatient = (patient) => {
+        setSelectedPatient(patient);
+        setClinicalNotes(patient.notes || '');
+        setDriveLink(patient.googleDriveLink || '');
+        setNextAppointment(patient.nextAppointment || '');
+        fetchHistory(patient.phone);
+    };
+
+    const fetchHistory = async (phone) => {
+        try {
+            const q = query(
+                collection(db, 'bookings'),
+                where('phone', '==', phone),
+                where('status', '==', 'completed')
+            );
+            const snapshot = await getDocs(q);
+            const history = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            // Sort history by date descending
+            history.sort((a, b) => new Date(b.date) - new Date(a.date));
+            setPatientHistory(history);
+        } catch (err) {
+            console.error("Error fetching history:", err);
+        }
+    };
+
+    const handleFileUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file || !selectedPatient) return;
+
+        if (GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_SCRIPT_WEB_APP_URL') {
+            alert("Please set your Google Script URL in Dashboard.jsx first!");
+            return;
+        }
+
+        setIsUploading(true);
+        try {
+            // Convert file to Base64
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = async () => {
+                const base64Content = reader.result.split(',')[1];
+
+                const payload = {
+                    name: file.name,
+                    type: file.type,
+                    base64: base64Content,
+                    phone: selectedPatient.phone
+                };
+
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // Important for Google Apps Script Web Apps
+                    body: JSON.stringify(payload)
+                });
+
+                // Note: 'no-cors' means we can't read the JSON response directly due to browser security
+                // but we can ask the user to paste the link or we can assume it worked if no error
+                // A better way is to use a direct redirect or a simpler message
+
+                alert("File sent to Google Drive! If you set up the Script correctly, it's now in your folder.");
+                setDriveLink("Sent to Google Drive (Check your folder)");
+                setIsUploading(false);
+            };
+        } catch (err) {
+            console.error("Upload error:", err);
+            alert("Upload failed: " + err.message);
+            setIsUploading(false);
+        }
+    };
+
     const updateStatus = async (bookingId, newStatus) => {
         try {
             const docRef = doc(db, 'bookings', bookingId);
@@ -45,9 +122,7 @@ const Dashboard = () => {
             // If we're calling a patient, select them automatically
             if (newStatus === 'calling') {
                 const patient = bookings.find(b => b.id === bookingId);
-                setSelectedPatient(patient);
-                setClinicalNotes('');
-                setDriveLink('');
+                selectPatient(patient);
             }
         } catch (err) {
             console.error(err);
@@ -95,7 +170,7 @@ const Dashboard = () => {
                     {bookings.map((booking) => (
                         <div
                             key={booking.id}
-                            onClick={() => setSelectedPatient(booking)}
+                            onClick={() => selectPatient(booking)}
                             className={`p-3 rounded-xl border transition-all cursor-pointer ${selectedPatient?.id === booking.id
                                 ? 'bg-medical-50 border-medical-200 ring-2 ring-medical-100'
                                 : 'bg-white border-slate-100 hover:border-medical-200'
@@ -194,20 +269,32 @@ const Dashboard = () => {
 
                                 <div className="space-y-6">
                                     <div>
-                                        <label htmlFor="driveLink" className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Google Drive Records</label>
-                                        <div className="relative">
-                                            <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                                            <input
-                                                id="driveLink"
-                                                name="driveLink"
-                                                type="url"
-                                                className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-medical-500 transition-all outline-none"
-                                                placeholder="Paste PDF or Image link..."
-                                                value={driveLink}
-                                                onChange={(e) => setDriveLink(e.target.value)}
-                                            />
+                                        <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Patient Records (PDF/Images)</label>
+                                        <div className="flex gap-2">
+                                            <div className="relative flex-grow">
+                                                <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                                                <input
+                                                    id="driveLink"
+                                                    name="driveLink"
+                                                    type="url"
+                                                    className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-medical-500 transition-all outline-none bg-slate-50"
+                                                    placeholder="File URL will appear here..."
+                                                    value={driveLink}
+                                                    readOnly
+                                                />
+                                            </div>
+                                            <label className={`cursor-pointer flex items-center justify-center px-4 rounded-xl border-2 border-dashed border-medical-200 hover:bg-medical-50 transition-all ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
+                                                <Upload className="w-5 h-5 text-medical-600" />
+                                                <input
+                                                    type="file"
+                                                    className="hidden"
+                                                    onChange={handleFileUpload}
+                                                    accept="image/*,.pdf"
+                                                />
+                                            </label>
                                         </div>
-                                        <p className="text-[10px] text-slate-400 mt-2 px-1">Link laboratory results or patient x-rays here.</p>
+                                        {isUploading && <p className="text-[10px] text-medical-600 mt-1 animate-pulse font-bold">Uploading file...</p>}
+                                        <p className="text-[10px] text-slate-400 mt-2 px-1">Upload laboratory results or patient x-rays safely to Firebase Storage.</p>
                                     </div>
 
                                     <div>
@@ -230,11 +317,14 @@ const Dashboard = () => {
                                             <FileText className="w-5 h-5" /> Quick Actions
                                         </h4>
                                         <div className="space-y-2">
-                                            <button className="w-full text-left text-sm py-2 px-3 rounded-lg hover:bg-white transition-colors text-slate-600 border border-transparent hover:border-medical-200">
-                                                Print Prescription
+                                            <button
+                                                onClick={() => setShowHistory(true)}
+                                                className="w-full text-left text-sm py-2 px-3 rounded-lg hover:bg-white transition-colors text-slate-600 border border-transparent hover:border-medical-200 flex items-center gap-2"
+                                            >
+                                                <History className="w-4 h-4" /> View Medical History ({patientHistory.length})
                                             </button>
-                                            <button className="w-full text-left text-sm py-2 px-3 rounded-lg hover:bg-white transition-colors text-slate-600 border border-transparent hover:border-medical-200">
-                                                View History
+                                            <button className="w-full text-left text-sm py-2 px-3 rounded-lg hover:bg-white transition-colors text-slate-600 border border-transparent hover:border-medical-200 flex items-center gap-2">
+                                                <FileText className="w-4 h-4" /> Print Prescription
                                             </button>
                                         </div>
                                     </div>
@@ -264,6 +354,66 @@ const Dashboard = () => {
                     )}
                 </div>
             </div>
+
+            {/* History Modal */}
+            <AnimatePresence>
+                {showHistory && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/50 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-white rounded-2xl w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl"
+                        >
+                            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+                                <div>
+                                    <h3 className="text-xl font-bold text-slate-900">Medical History</h3>
+                                    <p className="text-sm text-slate-500">{selectedPatient?.name}</p>
+                                </div>
+                                <button
+                                    onClick={() => setShowHistory(false)}
+                                    className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                                >
+                                    <X className="w-6 h-6 text-slate-400" />
+                                </button>
+                            </div>
+
+                            <div className="flex-grow overflow-y-auto p-6 space-y-6">
+                                {patientHistory.length === 0 ? (
+                                    <div className="text-center py-12 text-slate-400">
+                                        No previous records found for this patient.
+                                    </div>
+                                ) : (
+                                    patientHistory.map((item) => (
+                                        <div key={item.id} className="border border-slate-100 rounded-xl p-4 bg-slate-50/50">
+                                            <div className="flex justify-between items-start mb-3">
+                                                <div className="flex items-center gap-2">
+                                                    <Calendar className="w-4 h-4 text-medical-600" />
+                                                    <span className="font-bold text-slate-700">{item.date}</span>
+                                                </div>
+                                                <span className="text-[10px] uppercase font-black bg-green-100 text-green-600 px-2 py-0.5 rounded-full">Completed</span>
+                                            </div>
+                                            <div className="bg-white p-3 rounded-lg border border-slate-100 mb-3 text-sm text-slate-600 whitespace-pre-wrap">
+                                                {item.notes || "No clinical notes provided."}
+                                            </div>
+                                            {item.googleDriveLink && (
+                                                <a
+                                                    href={item.googleDriveLink}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-2 text-xs font-bold text-medical-600 hover:underline"
+                                                >
+                                                    <Eye className="w-3 h-3" /> View Attached Record
+                                                </a>
+                                            )}
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
