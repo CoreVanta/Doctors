@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebase';
 import { collection, addDoc, query, where, getDocs, orderBy, limit, onSnapshot } from 'firebase/firestore';
-import { Calendar, User, Phone, Clock, CheckCircle2 } from 'lucide-react';
+import { Calendar, User, Phone, Clock, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, addMinutes } from 'date-fns';
 
