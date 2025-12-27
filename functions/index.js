@@ -1,12 +1,14 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 admin.initializeApp();
-const axios = require('axios');
 
-// WhatsApp Cloud API Config
-const WHATSAPP_TOKEN = 'YOUR_META_ACCESS_TOKEN';
-const PHONE_NUMBER_ID = 'YOUR_PHONE_NUMBER_ID';
-const API_URL = `https://graph.facebook.com/v17.0/${PHONE_NUMBER_ID}/messages`;
+// Twilio Configuration
+const accountSid = 'AC45a599b11744179644b0417f7ee74674';
+const authToken = 'd4dff0de6991854e5ec2aa631a231153';
+const client = require('twilio')(accountSid, authToken);
+
+// Twilio WhatsApp Sandbox Number
+const TWILIO_WHATSAPP_FROM = 'whatsapp:+14155238886';
 
 /**
  * Trigger 1: Send confirmation on booking creation
@@ -15,33 +17,24 @@ exports.sendBookingConfirmation = functions.firestore
     .document('bookings/{bookingId}')
     .onCreate(async (snap, context) => {
         const newValue = snap.data();
-        const phoneNumber = newValue.phone.replace(/\D/g, ''); // Ensure digits only
+        const phoneNumber = newValue.phone;
+
+        // Ensure phone number has country code (default to +20 for Egypt)
+        const formattedPhone = phoneNumber.startsWith('+')
+            ? phoneNumber
+            : `+20${phoneNumber.replace(/^0+/, '')}`;
+
+        const whatsappNumber = `whatsapp:${formattedPhone}`;
 
         try {
-            await axios.post(API_URL, {
-                messaging_product: "whatsapp",
-                to: phoneNumber,
-                type: "template",
-                template: {
-                    name: "booking_confirmation",
-                    language: { code: "en_US" },
-                    components: [
-                        {
-                            type: "body",
-                            parameters: [
-                                { type: "text", text: newValue.name },
-                                { type: "text", text: newValue.date },
-                                { type: "text", text: `#${newValue.queueNumber}` },
-                                { type: "text", text: newValue.estimatedTime }
-                            ]
-                        }
-                    ]
-                }
-            }, {
-                headers: { 'Authorization': `Bearer ${WHATSAPP_TOKEN}` }
+            await client.messages.create({
+                from: TWILIO_WHATSAPP_FROM,
+                to: whatsappNumber,
+                body: `مرحباً ${newValue.name}! تم تأكيد حجزك ليوم ${newValue.date}. رقم دورك: #${newValue.queueNumber}. الوقت المتوقع: ${newValue.estimatedTime}.`
             });
+            console.log(`Booking confirmation sent to ${whatsappNumber}`);
         } catch (error) {
-            console.error('WhatsApp API Error:', error.response ? error.response.data : error.message);
+            console.error('Twilio WhatsApp Error:', error.message);
         }
     });
 
@@ -68,18 +61,25 @@ exports.notifyNextPatient = functions.firestore
 
             if (!nextPatientSnap.empty) {
                 const nextPatient = nextPatientSnap.docs[0].data();
-                const phoneNumber = nextPatient.phone.replace(/\D/g, '');
+                const phoneNumber = nextPatient.phone;
 
-                await axios.post(API_URL, {
-                    messaging_product: "whatsapp",
-                    to: phoneNumber,
-                    type: "text",
-                    text: {
-                        body: `Hello ${nextPatient.name}, the doctor is now serving #${after.queueNumber}. You are next in queue (#${nextPatient.queueNumber}). Please head to the clinic.`
-                    }
-                }, {
-                    headers: { 'Authorization': `Bearer ${WHATSAPP_TOKEN}` }
-                });
+                // Ensure phone number has country code
+                const formattedPhone = phoneNumber.startsWith('+')
+                    ? phoneNumber
+                    : `+20${phoneNumber.replace(/^0+/, '')}`;
+
+                const whatsappNumber = `whatsapp:${formattedPhone}`;
+
+                try {
+                    await client.messages.create({
+                        from: TWILIO_WHATSAPP_FROM,
+                        to: whatsappNumber,
+                        body: `مرحباً ${nextPatient.name}، الطبيب الآن يخدم المريض #${after.queueNumber}. أنت التالي (#${nextPatient.queueNumber}). يرجى التوجه للعيادة.`
+                    });
+                    console.log(`Next patient notification sent to ${whatsappNumber}`);
+                } catch (error) {
+                    console.error('Twilio WhatsApp Error:', error.message);
+                }
             }
         }
     });
