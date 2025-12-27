@@ -61,6 +61,17 @@ const Home = () => {
                         transition={{ duration: 0.5 }}
                         className="max-w-4xl mx-auto"
                     >
+                        {/* Doctor Profile Image */}
+                        <div className="mb-8 flex justify-center">
+                            <div className="relative w-40 h-40 rounded-full overflow-hidden border-4 border-medical-500 shadow-2xl">
+                                <img
+                                    src={doctorProfile.photoUrl || '/doctor-default.png'}
+                                    alt={doctorProfile.name}
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                        </div>
+
                         <h1 className="text-5xl md:text-6xl font-extrabold text-slate-900 mb-4 leading-tight">
                             {doctorProfile.name}
                         </h1>

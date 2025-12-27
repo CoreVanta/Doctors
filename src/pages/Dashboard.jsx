@@ -13,6 +13,7 @@ import { enUS, arSA } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import ProfileServicesManager from '../components/ProfileServicesManager';
 
 // REPLACE THIS with your Google Apps Script Web App URL
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyK_DSjFavVCsE0DH49qxke-NVR8Nq_nFP3saZD86VKGIQ1TDPxIF3WTmwz995Oa46tGw/exec';
@@ -53,6 +54,7 @@ const Dashboard = () => {
     const [visibleRecordId, setVisibleRecordId] = useState(null); // To load iframes on demand
     const [isUploading, setIsUploading] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
+    const [showProfileManager, setShowProfileManager] = useState(false);
     const [settings, setSettings] = useState({
         intervalMinutes: 10,
         dailyLimit: 20,
@@ -433,6 +435,13 @@ const Dashboard = () => {
                     <div className="flex justify-center">
                         <LanguageSwitcher />
                     </div>
+                    <button
+                        onClick={() => setShowProfileManager(true)}
+                        className="w-full py-2 px-4 bg-medical-500 hover:bg-medical-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                    >
+                        <User className="w-4 h-4" />
+                        Profile & Services
+                    </button>
                     <button
                         onClick={() => auth.signOut()}
                         className="w-full py-2 text-slate-500 hover:text-red-500 text-sm font-medium"
@@ -976,6 +985,15 @@ const Dashboard = () => {
                     </div>
                 )}
             </AnimatePresence>
+
+            {/* Profile & Services Manager Modal */}
+            {showProfileManager && (
+                <ProfileServicesManager
+                    settings={settings}
+                    setSettings={setSettings}
+                    onClose={() => setShowProfileManager(false)}
+                />
+            )}
         </div>
     );
 };
