@@ -4,7 +4,7 @@ import { collection, query, where, onSnapshot, doc, updateDoc, Timestamp, addDoc
 import {
     Users, CheckCircle2, PlayCircle, SkipForward, ArrowRight,
     ExternalLink, FileText, Clipboard, Search, Plus, Calendar,
-    History, Upload, X, Eye
+    History, Upload, X, Eye, Settings, Clock, Save, Shield
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
@@ -44,7 +44,32 @@ const Dashboard = () => {
     const [showHistory, setShowHistory] = useState(false);
     const [visibleRecordId, setVisibleRecordId] = useState(null); // To load iframes on demand
     const [isUploading, setIsUploading] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
+    const [settings, setSettings] = useState({
+        startTime: '09:00',
+        endTime: '17:00',
+        intervalMinutes: 10,
+        dailyLimit: 20,
+        holidays: ['Friday', 'Saturday']
+    });
+
     const todaysDate = format(new Date(), 'yyyy-MM-dd');
+
+    useEffect(() => {
+        // Fetch Settings
+        const fetchSettings = async () => {
+            const docRef = doc(db, 'settings', 'clinic_settings');
+            const docSnap = await getDocs(query(collection(db, 'settings'), where('id', '==', 'clinic_settings')));
+            // Using getDocs for simplicity if id is used, but ideally use direct doc()
+            // Let's use direct doc
+            onSnapshot(doc(db, 'settings', 'clinic_settings'), (doc) => {
+                if (doc.exists()) {
+                    setSettings(doc.data());
+                }
+            });
+        };
+        fetchSettings();
+    }, []);
 
     useEffect(() => {
         const q = query(
@@ -103,11 +128,39 @@ const Dashboard = () => {
             );
             const snapshot = await getDocs(q);
             const history = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            // Sort history by date descending
-            history.sort((a, b) => new Date(b.date) - new Date(a.date));
+            // Sort history by date AND updatedAt for precision
+            history.sort((a, b) => {
+                const dateA = new Date(a.date).getTime();
+                const dateB = new Date(b.date).getTime();
+                if (dateA !== dateB) return dateB - dateA;
+
+                const timeA = a.updatedAt?.toMillis() || 0;
+                const timeB = b.updatedAt?.toMillis() || 0;
+                return timeB - timeA;
+            });
             setPatientHistory(history);
         } catch (err) {
             console.error("Error fetching history:", err);
+        }
+    };
+
+    const handleSaveSettings = async (e) => {
+        e.preventDefault();
+        try {
+            await updateDoc(doc(db, 'settings', 'clinic_settings'), settings);
+            alert("Clinic Settings updated successfully!");
+            setShowSettings(false);
+        } catch (err) {
+            // If doc doesn't exist, create it
+            try {
+                const { setDoc } = await import('firebase/firestore');
+                await setDoc(doc(db, 'settings', 'clinic_settings'), settings);
+                alert("Clinic Settings created and saved!");
+                setShowSettings(false);
+            } catch (innerErr) {
+                console.error("Save Settings Error:", err);
+                alert("Failed to save settings.");
+            }
         }
     };
 
@@ -558,6 +611,125 @@ const Dashboard = () => {
                                     ))
                                 )}
                             </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Clinic Settings Modal */}
+            <AnimatePresence>
+                {showSettings && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/50 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden"
+                        >
+                            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-medical-600 text-white">
+                                <div className="flex items-center gap-2">
+                                    <Settings className="w-5 h-5" />
+                                    <h3 className="text-xl font-bold">Clinic Settings</h3>
+                                </div>
+                                <button onClick={() => setShowSettings(false)} className="p-2 hover:bg-medical-700 rounded-full transition-colors">
+                                    <X className="w-6 h-6 text-white" />
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleSaveSettings} className="p-6 space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Work Starts</label>
+                                        <div className="relative">
+                                            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                            <input
+                                                type="time"
+                                                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-medical-500 outline-none"
+                                                value={settings.startTime}
+                                                onChange={(e) => setSettings({ ...settings, startTime: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Work Ends</label>
+                                        <div className="relative">
+                                            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                            <input
+                                                type="time"
+                                                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-medical-500 outline-none"
+                                                value={settings.endTime}
+                                                onChange={(e) => setSettings({ ...settings, endTime: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Patients / Hour</label>
+                                        <select
+                                            className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-medical-500 outline-none"
+                                            value={60 / settings.intervalMinutes}
+                                            onChange={(e) => setSettings({ ...settings, intervalMinutes: 60 / parseInt(e.target.value) })}
+                                        >
+                                            <option value="2">2 (Every 30m)</option>
+                                            <option value="3">3 (Every 20m)</option>
+                                            <option value="4">4 (Every 15m)</option>
+                                            <option value="6">6 (Every 10m)</option>
+                                            <option value="12">12 (Every 5m)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Daily Capacity</label>
+                                        <input
+                                            type="number"
+                                            className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-medical-500 outline-none"
+                                            value={settings.dailyLimit}
+                                            onChange={(e) => setSettings({ ...settings, dailyLimit: parseInt(e.target.value) })}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Weekly Holidays</label>
+                                    <div className="grid grid-cols-4 gap-2">
+                                        {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
+                                            <button
+                                                key={day}
+                                                type="button"
+                                                onClick={() => {
+                                                    const newHolidays = settings.holidays.includes(day)
+                                                        ? settings.holidays.filter(h => h !== day)
+                                                        : [...settings.holidays, day];
+                                                    setSettings({ ...settings, holidays: newHolidays });
+                                                }}
+                                                className={`px-2 py-1.5 text-[10px] font-bold rounded-lg border transition-all ${settings.holidays.includes(day)
+                                                        ? 'bg-red-50 border-red-200 text-red-600'
+                                                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-medical-200'
+                                                    }`}
+                                            >
+                                                {day.substring(0, 3)}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="pt-4 border-t border-slate-100 flex gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowSettings(false)}
+                                        className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="flex-1 py-3 bg-medical-600 text-white rounded-xl font-bold hover:bg-medical-700 shadow-lg shadow-medical-200 flex items-center justify-center gap-2"
+                                    >
+                                        <Save className="w-4 h-4" /> Save Settings
+                                    </button>
+                                </div>
+                            </form>
                         </motion.div>
                     </div>
                 )}

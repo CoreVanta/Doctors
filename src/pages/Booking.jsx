@@ -11,19 +11,39 @@ const Booking = () => {
     const [formData, setFormData] = useState({ name: '', phone: '', date: format(new Date(), 'yyyy-MM-dd') });
     const [loading, setLoading] = useState(false);
     const [bookingConfirmed, setBookingConfirmed] = useState(null);
+    const [settings, setSettings] = useState({
+        startTime: '09:00',
+        endTime: '17:00',
+        intervalMinutes: 10,
+        dailyLimit: 20,
+        holidays: ['Friday', 'Saturday']
+    });
     const [stats, setStats] = useState({ totalBooked: 0, estimatedWait: 0 });
 
     useEffect(() => {
+        // Fetch Settings
+        const fetchSettings = async () => {
+            const docRef = doc(db, 'settings', 'clinic_settings');
+            const docSnap = await getDocs(query(collection(db, 'settings'), where('id', '==', 'clinic_settings')));
+            // Direct doc fetch for simplicity
+            onSnapshot(doc(db, 'settings', 'clinic_settings'), (doc) => {
+                if (doc.exists()) {
+                    setSettings(doc.data());
+                }
+            });
+        };
+        fetchSettings();
+
         // Fetch current bookings for the selected date to show stats
         const q = query(collection(db, 'bookings'), where('date', '==', formData.date));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             setStats({
                 totalBooked: snapshot.size,
-                estimatedWait: snapshot.size * 15 // 15 mins per patient
+                estimatedWait: snapshot.size * (settings.intervalMinutes || 15)
             });
         });
         return () => unsubscribe();
-    }, [formData.date]);
+    }, [formData.date, settings.intervalMinutes]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -42,8 +62,32 @@ const Booking = () => {
         }, 15000);
 
         try {
+            // Validate Holiday
+            const dayName = format(new Date(formData.date), 'EEEE');
+            if (settings.holidays.includes(dayName)) {
+                alert(`Sorry, the clinic is closed on ${dayName}s.`);
+                setLoading(false);
+                return;
+            }
+
+            // Validate Capacity
+            if (stats.totalBooked >= settings.dailyLimit) {
+                alert("Sorry, we have reached the maximum number of bookings for this day.");
+                setLoading(false);
+                return;
+            }
+
             console.log("Current stats for queue calculation:", stats);
             const nextQueueNumber = (stats.totalBooked || 0) + 1;
+
+            // Calculate Dynamic Estimated Time
+            // Start from clinic startTime OR current time if booking for today
+            let baseTime = new Date(`${formData.date}T${settings.startTime}`);
+            const now = new Date();
+            if (formData.date === format(now, 'yyyy-MM-dd') && now > baseTime) {
+                baseTime = now;
+            }
+            const estimatedTime = format(addMinutes(baseTime, stats.totalBooked * settings.intervalMinutes), 'HH:mm');
 
             const bookingData = {
                 name: String(formData.name),
@@ -51,12 +95,11 @@ const Booking = () => {
                 date: String(formData.date),
                 queueNumber: Number(nextQueueNumber),
                 status: 'pending',
-                createdAt: new Date().toISOString(), // Use ISO string for absolute safety
-                estimatedTime: String(format(addMinutes(new Date(), stats.estimatedWait || 0), 'HH:mm'))
+                createdAt: new Date().toISOString(),
+                estimatedTime: String(estimatedTime)
             };
 
             console.log("Attempting to write to collection 'bookings' with data:", bookingData);
-
             const docRef = await addDoc(collection(db, 'bookings'), bookingData);
 
             isDone = true;
@@ -146,11 +189,20 @@ const Booking = () => {
                             <h4 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
                                 <ShieldCheck className="w-5 h-5 text-medical-600" /> Clinic Info
                             </h4>
-                            <p className="text-sm text-slate-600 leading-relaxed">
-                                Open Mon-Sat: 9 AM - 6 PM<br />
-                                Location: 123 Health Ave, Medical City<br />
-                                Emergency: (555) 012-3456
-                            </p>
+                            <div className="text-sm text-slate-600 space-y-2">
+                                <p className="flex justify-between">
+                                    <span className="font-medium text-slate-400 uppercase tracking-tighter text-[10px]">Hours</span>
+                                    <span>{settings.startTime} - {settings.endTime}</span>
+                                </p>
+                                <p className="flex justify-between border-t border-slate-50 pt-2">
+                                    <span className="font-medium text-slate-400 uppercase tracking-tighter text-[10px]">Holidays</span>
+                                    <span className="text-red-400">{settings.holidays.join(', ')}</span>
+                                </p>
+                                <p className="flex justify-between border-t border-slate-50 pt-2">
+                                    <span className="font-medium text-slate-400 uppercase tracking-tighter text-[10px]">Daily Limit</span>
+                                    <span>Max {settings.dailyLimit} patients</span>
+                                </p>
+                            </div>
                         </div>
                     </div>
 
