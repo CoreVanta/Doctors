@@ -90,8 +90,14 @@ const Dashboard = () => {
     }, [todaysDate]);
 
     const selectPatient = async (patient) => {
-        // Autosave current patient if notes were changed
-        if (selectedPatient && clinicalNotes !== (selectedPatient.notes || '')) {
+        // Autosave current patient if any data changed
+        const hasChanges = selectedPatient && (
+            clinicalNotes !== (selectedPatient.notes || '') ||
+            driveLink !== (selectedPatient.googleDriveLink || '') ||
+            nextAppointment !== (selectedPatient.nextAppointment || '')
+        );
+
+        if (hasChanges) {
             await handleSaveDraft(false);
         }
 
@@ -336,9 +342,18 @@ const Dashboard = () => {
             <div className="flex-grow flex flex-col overflow-hidden">
                 {/* Header Control */}
                 <div className="bg-white border-b border-slate-200 p-6 flex justify-between items-center">
-                    <div>
-                        <h1 className="text-2xl font-bold text-slate-900">Patient Consultation</h1>
-                        <p className="text-slate-500 text-sm">{format(new Date(), 'EEEE, MMMM do')}</p>
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => setShowSettings(true)}
+                            className="p-2 text-slate-400 hover:text-medical-600 hover:bg-medical-50 rounded-full transition-all"
+                            title="Clinic Settings"
+                        >
+                            <Settings className="w-6 h-6" />
+                        </button>
+                        <div>
+                            <h1 className="text-2xl font-bold text-slate-900">Patient Consultation</h1>
+                            <p className="text-slate-500 text-sm">{format(new Date(), 'EEEE, MMMM do')}</p>
+                        </div>
                     </div>
 
                     <div className="flex gap-3">
@@ -565,8 +580,13 @@ const Dashboard = () => {
                                                 </div>
                                                 <span className="text-[10px] uppercase font-black bg-green-100 text-green-600 px-2 py-0.5 rounded-full">Completed</span>
                                             </div>
-                                            <div className="bg-white p-3 rounded-lg border border-slate-100 mb-3 text-sm text-slate-600 whitespace-pre-wrap">
+                                            <div className="bg-white p-3 rounded-lg border border-slate-100 mb-3 text-sm text-slate-600 whitespace-pre-wrap relative">
                                                 {item.notes || "No clinical notes provided."}
+                                                {item.nextAppointment && (
+                                                    <div className="mt-2 pt-2 border-t border-slate-50 flex items-center gap-2 text-medical-600 font-bold text-[10px] uppercase">
+                                                        <Calendar className="w-3 h-3" /> Next Appointment: {item.nextAppointment}
+                                                    </div>
+                                                )}
                                             </div>
                                             {item.googleDriveLink && (
                                                 <div className="mt-3">
@@ -704,8 +724,8 @@ const Dashboard = () => {
                                                     setSettings({ ...settings, holidays: newHolidays });
                                                 }}
                                                 className={`px-2 py-1.5 text-[10px] font-bold rounded-lg border transition-all ${settings.holidays.includes(day)
-                                                        ? 'bg-red-50 border-red-200 text-red-600'
-                                                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-medical-200'
+                                                    ? 'bg-red-50 border-red-200 text-red-600'
+                                                    : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-medical-200'
                                                     }`}
                                             >
                                                 {day.substring(0, 3)}
