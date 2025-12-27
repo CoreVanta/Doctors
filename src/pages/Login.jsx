@@ -55,12 +55,14 @@ const Login = () => {
                         )}
 
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">
+                            <label htmlFor="loginEmail" className="block text-sm font-medium text-slate-700 mb-1">
                                 Email Address
                             </label>
                             <div className="relative">
                                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                                 <input
+                                    id="loginEmail"
+                                    name="email"
                                     type="email"
                                     required
                                     className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-medical-500 focus:border-transparent transition-all outline-none"
@@ -72,12 +74,14 @@ const Login = () => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">
+                            <label htmlFor="loginPassword" className="block text-sm font-medium text-slate-700 mb-1">
                                 Password
                             </label>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                                 <input
+                                    id="loginPassword"
+                                    name="password"
                                     type="password"
                                     required
                                     className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-medical-500 focus:border-transparent transition-all outline-none"

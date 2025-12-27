@@ -94,14 +94,14 @@ const Dashboard = () => {
                             key={booking.id}
                             onClick={() => setSelectedPatient(booking)}
                             className={`p-3 rounded-xl border transition-all cursor-pointer ${selectedPatient?.id === booking.id
-                                    ? 'bg-medical-50 border-medical-200 ring-2 ring-medical-100'
-                                    : 'bg-white border-slate-100 hover:border-medical-200'
+                                ? 'bg-medical-50 border-medical-200 ring-2 ring-medical-100'
+                                : 'bg-white border-slate-100 hover:border-medical-200'
                                 }`}
                         >
                             <div className="flex justify-between items-start mb-1">
                                 <span className="text-xs font-bold text-medical-600">#{booking.queueNumber}</span>
                                 <span className={`text-[10px] uppercase font-black px-2 py-0.5 rounded-full ${booking.status === 'calling' ? 'bg-orange-100 text-orange-600' :
-                                        booking.status === 'completed' ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-500'
+                                    booking.status === 'completed' ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-500'
                                     }`}>
                                     {booking.status}
                                 </span>
@@ -176,8 +176,10 @@ const Dashboard = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="space-y-6">
                                     <div>
-                                        <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Clinical Notes</label>
+                                        <label htmlFor="clinicalNotes" className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Clinical Notes</label>
                                         <textarea
+                                            id="clinicalNotes"
+                                            name="clinicalNotes"
                                             rows={10}
                                             className="w-full p-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-medical-500 transition-all outline-none resize-none bg-white"
                                             placeholder="Enter examination details, diagnosis, and treatment plan..."
@@ -189,10 +191,12 @@ const Dashboard = () => {
 
                                 <div className="space-y-6">
                                     <div>
-                                        <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Google Drive Records</label>
+                                        <label htmlFor="driveLink" className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Google Drive Records</label>
                                         <div className="relative">
                                             <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                                             <input
+                                                id="driveLink"
+                                                name="driveLink"
                                                 type="url"
                                                 className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-medical-500 transition-all outline-none"
                                                 placeholder="Paste PDF or Image link..."
@@ -204,10 +208,12 @@ const Dashboard = () => {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Next Appointment</label>
+                                        <label htmlFor="nextAppt" className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Next Appointment</label>
                                         <div className="relative">
                                             <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                                             <input
+                                                id="nextAppt"
+                                                name="nextAppt"
                                                 type="date"
                                                 className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-medical-500 transition-all outline-none"
                                                 value={nextAppointment}

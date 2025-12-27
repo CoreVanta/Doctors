@@ -136,10 +136,12 @@ const Booking = () => {
                         <div className="medical-card">
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Full Name</label>
+                                    <label htmlFor="fullName" className="block text-sm font-medium text-slate-700 mb-2">Full Name</label>
                                     <div className="relative">
                                         <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                                         <input
+                                            id="fullName"
+                                            name="name"
                                             type="text"
                                             required
                                             className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-medical-500 focus:border-transparent transition-all outline-none"
@@ -151,10 +153,12 @@ const Booking = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">WhatsApp Number</label>
+                                    <label htmlFor="whatsappNumber" className="block text-sm font-medium text-slate-700 mb-2">WhatsApp Number</label>
                                     <div className="relative">
                                         <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                                         <input
+                                            id="whatsappNumber"
+                                            name="phone"
                                             type="tel"
                                             required
                                             className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-medical-500 focus:border-transparent transition-all outline-none"
@@ -166,10 +170,12 @@ const Booking = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Preferred Date</label>
+                                    <label htmlFor="appointmentDate" className="block text-sm font-medium text-slate-700 mb-2">Preferred Date</label>
                                     <div className="relative">
                                         <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                                         <input
+                                            id="appointmentDate"
+                                            name="date"
                                             type="date"
                                             required
                                             min={format(new Date(), 'yyyy-MM-dd')}
