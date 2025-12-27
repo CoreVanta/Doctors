@@ -341,19 +341,19 @@ const Dashboard = () => {
             {/* Main Panel */}
             <div className="flex-grow flex flex-col overflow-hidden">
                 {/* Header Control */}
-                <div className="bg-white border-b border-slate-200 p-6 flex justify-between items-center">
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => setShowSettings(true)}
-                            className="p-2 text-slate-400 hover:text-medical-600 hover:bg-medical-50 rounded-full transition-all"
-                            title="Clinic Settings"
-                        >
-                            <Settings className="w-6 h-6" />
-                        </button>
+                <div className="bg-white border-b border-slate-200 p-6 flex justify-between items-center shadow-sm">
+                    <div className="flex items-center gap-6">
                         <div>
                             <h1 className="text-2xl font-bold text-slate-900">Patient Consultation</h1>
-                            <p className="text-slate-500 text-sm">{format(new Date(), 'EEEE, MMMM do')}</p>
+                            <p className="text-slate-500 text-sm font-medium">{format(new Date(), 'EEEE, MMMM do')}</p>
                         </div>
+                        <button
+                            onClick={() => setShowSettings(true)}
+                            className="flex items-center gap-2 px-4 py-2 bg-medical-50 text-medical-700 rounded-xl hover:bg-medical-100 transition-all border border-medical-100 font-bold text-sm"
+                        >
+                            <Settings className="w-4 h-4" />
+                            <span>Clinic Settings</span>
+                        </button>
                     </div>
 
                     <div className="flex gap-3">
