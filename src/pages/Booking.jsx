@@ -85,6 +85,11 @@ const Booking = () => {
         }, 15000);
 
         try {
+            // Get day name and schedule for the selected date
+            const selectedDate = new Date(formData.date + 'T00:00:00');
+            const dayName = format(selectedDate, 'EEEE'); // e.g., "Monday"
+            const schedule = settings.dailySchedules?.[dayName];
+
             // Validate Day Schedule
             if (schedule && !schedule.isOpen) {
                 alert(t('booking.validation.closed_day', { day: t(`days.${dayName.toLowerCase()}`) }));
