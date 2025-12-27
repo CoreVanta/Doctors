@@ -4,7 +4,8 @@ import { collection, query, where, onSnapshot, doc, updateDoc, Timestamp, addDoc
 import {
     Users, CheckCircle2, PlayCircle, SkipForward, ArrowRight,
     ExternalLink, FileText, Clipboard, Search, Plus, Calendar,
-    History, Upload, X, Eye, Settings, Clock, Save, Shield, MapPin, PhoneCall, Info
+    History, Upload, X, Eye, Settings, Clock, Save, Shield, MapPin, PhoneCall, Info,
+    Phone, FolderOpen, ChevronRight, ChevronLeft
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
@@ -391,153 +392,217 @@ const Dashboard = () => {
                         <motion.div
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="max-w-4xl mx-auto space-y-8"
+                            className="max-w-7xl mx-auto space-y-8"
                         >
-                            <div className="flex justify-between items-end">
-                                <div>
-                                    <h2 className="text-3xl font-bold text-slate-900">{selectedPatient.name}</h2>
-                                    <p className="text-slate-500 flex items-center gap-2 mt-1">
-                                        <Clipboard className="w-4 h-4" /> Queue #{selectedPatient.queueNumber} • {selectedPatient.phone}
-                                    </p>
+                            <div className="flex justify-between items-end bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+                                <div className="space-y-1">
+                                    <h2 className="text-4xl font-black text-slate-900 tracking-tight">{selectedPatient.name}</h2>
+                                    <div className="flex items-center gap-4 text-slate-500 font-medium">
+                                        <div className="flex items-center gap-1.5 bg-slate-100 px-3 py-1 rounded-full text-xs">
+                                            <Clipboard className="w-3.5 h-3.5 text-medical-600" /> Queue #{selectedPatient.queueNumber}
+                                        </div>
+                                        <div className="flex items-center gap-1.5 bg-slate-100 px-3 py-1 rounded-full text-xs">
+                                            <Phone className="w-3.5 h-3.5 text-medical-600" /> {selectedPatient.phone}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="text-right">
-                                    <span className="text-xs text-slate-400 uppercase font-bold tracking-widest">Booking Time</span>
-                                    <p className="text-lg font-bold text-slate-700">{selectedPatient.estimatedTime}</p>
+                                <div className="text-right bg-medical-50 border border-medical-100 p-4 rounded-2xl min-w-[150px]">
+                                    <span className="text-[10px] text-medical-600 uppercase font-black tracking-widest block mb-1">Booking Time</span>
+                                    <p className="text-2xl font-black text-slate-900 leading-none">{selectedPatient.estimatedTime}</p>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div className="space-y-6">
-                                    <div>
-                                        <label htmlFor="clinicalNotes" className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Clinical Notes</label>
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                                {/* Left Side - Clinical Documentation (7/12 columns) */}
+                                <div className="lg:col-span-12 xl:col-span-7 space-y-8">
+                                    <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm h-full">
+                                        <div className="flex items-center justify-between mb-6">
+                                            <label htmlFor="clinicalNotes" className="text-lg font-bold text-slate-800 flex items-center gap-3">
+                                                <div className="bg-medical-100 p-2 rounded-xl">
+                                                    <FileText className="w-5 h-5 text-medical-600" />
+                                                </div>
+                                                Clinical Notes & Diagnosis
+                                            </label>
+                                            <div className="text-[10px] text-slate-400 font-bold uppercase animate-pulse flex items-center gap-1">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                                                Autosave Enabled
+                                            </div>
+                                        </div>
                                         <textarea
                                             id="clinicalNotes"
                                             name="clinicalNotes"
-                                            rows={10}
-                                            className="w-full p-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-medical-500 transition-all outline-none resize-none bg-white"
-                                            placeholder="Enter examination details, diagnosis, and treatment plan..."
+                                            rows={18}
+                                            className="w-full p-6 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-medical-500/10 focus:border-medical-500 transition-all outline-none resize-none bg-slate-50/50 focus:bg-white text-slate-700 font-medium text-base leading-relaxed placeholder:text-slate-300"
+                                            placeholder="Start typing examination details, diagnosis, and treatment plan..."
                                             value={clinicalNotes}
                                             onChange={(e) => setClinicalNotes(e.target.value)}
                                         />
                                     </div>
                                 </div>
 
-                                <div className="space-y-6">
-                                    <div>
-                                        <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Patient Records (Drive / Upload)</label>
-                                        <div className="flex gap-2">
-                                            <div className="relative flex-grow">
-                                                <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                                                <input
-                                                    id="driveLink"
-                                                    name="driveLink"
-                                                    type="url"
-                                                    className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-medical-500 transition-all outline-none"
-                                                    placeholder="Drive Link or Auto-upload"
-                                                    value={driveLink}
-                                                    onChange={(e) => setDriveLink(e.target.value)}
-                                                />
+                                {/* Right Side - Records & Actions (5/12 columns) */}
+                                <div className="lg:col-span-12 xl:col-span-5 space-y-8">
+                                    {/* Records Section */}
+                                    <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+                                        <label className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-3">
+                                            <div className="bg-orange-100 p-2 rounded-xl">
+                                                <FolderOpen className="w-5 h-5 text-orange-600" />
                                             </div>
-                                            <label className={`cursor-pointer flex items-center justify-center px-4 rounded-xl border-2 border-dashed border-medical-200 hover:bg-medical-50 transition-all ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
-                                                <Upload className="w-5 h-5 text-medical-600" />
-                                                <input
-                                                    type="file"
-                                                    className="hidden"
-                                                    onChange={handleFileUpload}
-                                                    accept="image/*,.pdf"
-                                                />
-                                            </label>
-                                        </div>
-                                        {isUploading && <p className="text-[10px] text-medical-600 mt-1 animate-pulse font-bold">Uploading to Drive...</p>}
+                                            Patient Records
+                                        </label>
 
-                                        {/* Embedded Preview */}
-                                        {driveLink && (
-                                            <div className="mt-4 border border-slate-200 rounded-xl overflow-hidden min-h-[200px] bg-slate-100 relative group flex items-center justify-center">
-                                                {driveLink.includes('drive.google.com') ? (
-                                                    <div className="w-full">
-                                                        <img
-                                                            src={formatDrivePreview(driveLink)}
-                                                            className="max-h-[400px] w-auto object-contain mx-auto"
-                                                            alt="Patient Record Preview"
-                                                            onError={(e) => {
-                                                                // If thumbnail fails (e.g. PDF), show a 'View Document' button instead of automatic iframe
-                                                                e.target.style.display = 'none';
-                                                                e.target.parentElement.innerHTML = `
-                                                                    <div class="p-12 text-center">
-                                                                        <div class="bg-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm">
-                                                                            <svg class="w-6 h-6 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-                                                                        </div>
-                                                                        <p class="text-xs text-slate-500 font-bold mb-4">PDF Document Detected</p>
-                                                                        <a href="${driveLink}" target="_blank" rel="noopener noreferrer" class="btn-primary py-2 px-6 text-xs inline-block">Open PDF in New Tab</a>
-                                                                    </div>
-                                                                `;
-                                                            }}
-                                                        />
-                                                    </div>
-                                                ) : (
-                                                    <p className="text-xs text-slate-400">Preview not available for this link type</p>
-                                                )}
-                                                <div className="absolute inset-x-0 bottom-0 bg-slate-900/60 p-2 opacity-0 group-hover:opacity-100 transition-opacity flex justify-between items-center">
-                                                    <span className="text-[10px] text-white font-medium">Record Preview</span>
-                                                    <a href={driveLink} target="_blank" rel="noopener noreferrer" className="text-[10px] text-medical-200 font-bold hover:underline">Open Original</a>
+                                        <div className="space-y-6">
+                                            <div className="flex gap-3">
+                                                <div className="relative flex-grow group">
+                                                    <ExternalLink className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-medical-500 transition-colors w-5 h-5" />
+                                                    <input
+                                                        id="driveLink"
+                                                        name="driveLink"
+                                                        type="url"
+                                                        className="w-full pl-12 pr-4 py-4 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-medical-500/10 focus:border-medical-500 transition-all outline-none bg-slate-50/50 focus:bg-white text-sm"
+                                                        placeholder="Drive Link or Auto-upload"
+                                                        value={driveLink}
+                                                        onChange={(e) => setDriveLink(e.target.value)}
+                                                    />
                                                 </div>
+                                                <label className={`cursor-pointer flex items-center justify-center w-14 h-14 rounded-2xl border-2 border-dashed border-slate-200 hover:border-medical-500 hover:bg-medical-50 transition-all shrink-0 ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
+                                                    <Upload className="w-6 h-6 text-slate-400 hover:text-medical-600" />
+                                                    <input
+                                                        type="file"
+                                                        className="hidden"
+                                                        onChange={handleFileUpload}
+                                                        accept="image/*,.pdf"
+                                                    />
+                                                </label>
                                             </div>
-                                        )}
-                                    </div>
 
-                                    <div>
-                                        <label htmlFor="nextAppt" className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Next Appointment</label>
-                                        <div className="relative">
-                                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                                            <input
-                                                id="nextAppt"
-                                                name="nextAppt"
-                                                type="date"
-                                                className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-medical-500 transition-all outline-none"
-                                                value={nextAppointment}
-                                                onChange={(e) => setNextAppointment(e.target.value)}
-                                            />
+                                            {isUploading && (
+                                                <div className="bg-medical-50 p-4 rounded-xl border border-medical-100 flex items-center gap-3">
+                                                    <div className="w-2 h-2 rounded-full bg-medical-500 animate-ping" />
+                                                    <span className="text-xs text-medical-600 font-bold uppercase tracking-wider">Uploading to Secure Drive...</span>
+                                                </div>
+                                            )}
+
+                                            {/* Preview Card */}
+                                            {driveLink ? (
+                                                <div className="rounded-[1.5rem] overflow-hidden border border-slate-100 bg-slate-100 relative group aspect-video shadow-inner flex items-center justify-center">
+                                                    {driveLink.includes('drive.google.com') ? (
+                                                        <div className="w-full h-full flex items-center justify-center bg-slate-50">
+                                                            <img
+                                                                src={formatDrivePreview(driveLink)}
+                                                                className="max-h-full max-w-full object-contain mx-auto transition-transform group-hover:scale-110 duration-700"
+                                                                alt="Patient Record Preview"
+                                                                onError={(e) => {
+                                                                    e.target.style.display = 'none';
+                                                                    e.target.parentElement.innerHTML = `
+                                                                        <div class="p-8 text-center bg-white w-full h-full flex flex-col items-center justify-center">
+                                                                            <div class="bg-red-50 w-16 h-16 rounded-3xl flex items-center justify-center mb-4">
+                                                                                <svg class="w-8 h-8 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                                                            </div>
+                                                                            <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-4">PDF Document Detected</p>
+                                                                            <a href="${driveLink}" target="_blank" rel="noopener noreferrer" class="bg-slate-900 text-white py-3 px-6 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-lg active:scale-95">Open Record</a>
+                                                                        </div>
+                                                                    `;
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    ) : (
+                                                        <div className="p-8 text-center">
+                                                            <p className="text-xs text-slate-400 font-bold">External link provided. No preview available.</p>
+                                                            <a href={driveLink} target="_blank" rel="noopener noreferrer" className="mt-2 text-medical-600 hover:underline font-bold text-xs inline-block">Open Resource</a>
+                                                        </div>
+                                                    )}
+                                                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/80 to-transparent p-6 opacity-0 group-hover:opacity-100 transition-opacity flex justify-between items-center">
+                                                        <span className="text-xs text-white font-bold uppercase tracking-wider">Record Preview</span>
+                                                        <a href={driveLink} target="_blank" rel="noopener noreferrer" className="bg-white/20 backdrop-blur-md text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase hover:bg-white/30 transition-all">Original</a>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="aspect-video bg-slate-50 rounded-[1.5rem] border-2 border-dashed border-slate-100 flex flex-col items-center justify-center text-slate-300">
+                                                    <FolderOpen className="w-10 h-10 mb-2 opacity-20" />
+                                                    <span className="text-[10px] font-black uppercase tracking-widest">No Records Linked</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
-                                    <div className="bg-medical-50 rounded-xl p-6 border border-medical-100">
-                                        <h4 className="font-bold text-medical-800 mb-2 flex items-center gap-2">
-                                            <FileText className="w-5 h-5" /> Quick Actions
-                                        </h4>
-                                        <div className="space-y-2">
-                                            <button
-                                                onClick={() => setShowHistory(true)}
-                                                className="w-full text-left text-sm py-2 px-3 rounded-lg hover:bg-white transition-colors text-slate-600 border border-transparent hover:border-medical-200 flex items-center gap-2"
-                                            >
-                                                <History className="w-4 h-4" /> View Medical History ({patientHistory.length})
-                                            </button>
-                                            <button className="w-full text-left text-sm py-2 px-3 rounded-lg hover:bg-white transition-colors text-slate-600 border border-transparent hover:border-medical-200 flex items-center gap-2">
-                                                <FileText className="w-4 h-4" /> Print Prescription
-                                            </button>
+                                    {/* Next Appt & Quick Actions */}
+                                    <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm space-y-8">
+                                        <div>
+                                            <label htmlFor="nextAppt" className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                                <Calendar className="w-4 h-4 text-medical-600" />
+                                                Schedule Next Appointment
+                                            </label>
+                                            <div className="relative">
+                                                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 pointer-events-none" />
+                                                <input
+                                                    id="nextAppt"
+                                                    name="nextAppt"
+                                                    type="date"
+                                                    className="w-full pl-12 pr-4 py-4 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-medical-500/10 focus:border-medical-500 transition-all outline-none bg-slate-50/50 focus:bg-white font-bold text-slate-700"
+                                                    value={nextAppointment}
+                                                    onChange={(e) => setNextAppointment(e.target.value)}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="pt-8 border-t border-slate-50">
+                                            <h4 className="text-sm font-bold text-slate-800 mb-4 uppercase tracking-widest">Quick Utilities</h4>
+                                            <div className="grid grid-cols-1 gap-3">
+                                                <button
+                                                    onClick={() => setShowHistory(true)}
+                                                    className="group w-full flex items-center justify-between p-4 rounded-2xl bg-slate-50 hover:bg-medical-600 transition-all duration-300"
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="bg-white p-2 rounded-lg group-hover:bg-medical-500 text-medical-600 group-hover:text-white transition-colors">
+                                                            <History className="w-5 h-5" />
+                                                        </div>
+                                                        <div className="text-left">
+                                                            <span className="block text-xs font-bold text-slate-700 group-hover:text-white">Medical History</span>
+                                                            <span className="block text-[10px] text-slate-400 group-hover:text-medical-200 uppercase font-black">{patientHistory.length} Previous Records</span>
+                                                        </div>
+                                                    </div>
+                                                    <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-white" />
+                                                </button>
+
+                                                <button className="group w-full flex items-center justify-between p-4 rounded-2xl bg-slate-50 hover:bg-slate-900 transition-all duration-300">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="bg-white p-2 rounded-lg group-hover:bg-slate-800 text-slate-400 group-hover:text-white transition-colors">
+                                                            <FileText className="w-5 h-5" />
+                                                        </div>
+                                                        <div className="text-left">
+                                                            <span className="block text-xs font-bold text-slate-700 group-hover:text-white">Prescription</span>
+                                                            <span className="block text-[10px] text-slate-400 group-hover:text-slate-500 uppercase font-black">Generate & Print</span>
+                                                        </div>
+                                                    </div>
+                                                    <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-white" />
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="pt-6 border-t border-slate-200 flex justify-between items-center gap-3">
+                            {/* Control Bar */}
+                            <div className="sticky bottom-0 bg-white/80 backdrop-blur-xl p-6 rounded-[2rem] border border-slate-100 shadow-[0_-20px_40px_-15px_rgba(0,0,0,0.05)] flex justify-between items-center z-10">
                                 <button
                                     onClick={() => handleSaveDraft(true)}
-                                    className="px-6 py-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-all font-bold text-sm"
+                                    className="px-8 py-4 bg-slate-100 text-slate-600 rounded-2xl hover:bg-slate-200 transition-all font-black text-xs uppercase tracking-widest flex items-center gap-2"
                                 >
-                                    Save Draft
+                                    <Save className="w-4 h-4" /> Save as Draft
                                 </button>
-                                <div className="flex gap-3">
+                                <div className="flex items-center gap-6">
                                     <button
                                         onClick={() => setSelectedPatient(null)}
-                                        className="px-6 py-2 text-slate-500 font-medium"
+                                        className="text-slate-400 font-bold text-xs uppercase tracking-widest hover:text-red-500 transition-colors"
                                     >
-                                        Cancel
+                                        Exit Session
                                     </button>
                                     <button
                                         onClick={handleSaveNotes}
-                                        className="btn-primary px-8"
+                                        className="bg-medical-600 hover:bg-medical-700 text-white px-12 py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-medical-200 transition-all hover:scale-105 active:scale-95 flex items-center gap-3"
                                     >
-                                        Save & Complete Consultation
+                                        <CheckCircle2 className="w-5 h-5" /> Complete Consultation
                                     </button>
                                 </div>
                             </div>

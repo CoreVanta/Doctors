@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebase';
 import { collection, addDoc, query, where, getDocs, onSnapshot, serverTimestamp, doc } from 'firebase/firestore';
-import { Calendar, User, Phone, Clock, CheckCircle2, ShieldCheck, MapPin, PhoneCall } from 'lucide-react';
+import { Calendar, User, Phone, Clock, CheckCircle2, ShieldCheck, MapPin, PhoneCall, Info, Clipboard } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, addMinutes } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
@@ -193,64 +193,173 @@ const Booking = () => {
     }
 
     return (
-        <div className="min-h-screen py-12 px-6">
-            <div className="max-w-4xl mx-auto">
-                <div className="text-center mb-12">
-                    <h1 className="text-4xl font-bold text-slate-900 mb-4">Book an Appointment</h1>
-                    <p className="text-slate-600">Quick and easy booking in less than a minute.</p>
+        <div className="min-h-screen py-12 px-6 bg-slate-50/50">
+            <div className="max-w-7xl mx-auto px-4">
+                <div className="text-center mb-16">
+                    <h1 className="text-5xl font-black text-slate-900 mb-4 tracking-tight">Book an Appointment</h1>
+                    <p className="text-slate-500 text-lg">Quick and easy booking in less than a minute.</p>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Stats / Info */}
-                    <div className="lg:col-span-1 space-y-6">
-                        <div className="medical-card bg-medical-600 text-white border-none">
-                            <h3 className="text-lg font-semibold mb-2">Live Availability</h3>
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-3">
-                                    <User className="w-5 h-5 opacity-80" />
-                                    <span>{stats.totalBooked} Patients Today</span>
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+                    {/* Main Form Section - Left Side on Desktop */}
+                    <div className="lg:col-span-12 xl:col-span-8 order-2 xl:order-1">
+                        <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/60 p-8 md:p-12 border border-slate-100">
+                            <h2 className="text-2xl font-bold text-slate-800 mb-8 flex items-center gap-3">
+                                <div className="bg-medical-100 p-2 rounded-xl">
+                                    <Clipboard className="w-6 h-6 text-medical-600" />
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    <Clock className="w-5 h-5 opacity-80" />
-                                    <span>{stats.estimatedWait} min Estimated Wait</span>
+                                Patient Information
+                            </h2>
+
+                            <form onSubmit={handleSubmit} className="space-y-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div>
+                                        <label htmlFor="fullName" className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">Full Name</label>
+                                        <div className="relative group">
+                                            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-medical-500 transition-colors w-5 h-5" />
+                                            <input
+                                                id="fullName"
+                                                name="name"
+                                                type="text"
+                                                required
+                                                className="w-full pl-12 pr-4 py-4 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-medical-500/10 focus:border-medical-500 transition-all outline-none bg-slate-50/50 focus:bg-white text-slate-800"
+                                                placeholder="Enter your full name"
+                                                value={formData.name}
+                                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label htmlFor="whatsappNumber" className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">WhatsApp Number</label>
+                                        <div className="relative group">
+                                            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-medical-500 transition-colors w-5 h-5" />
+                                            <input
+                                                id="whatsappNumber"
+                                                name="phone"
+                                                type="tel"
+                                                required
+                                                className="w-full pl-12 pr-4 py-4 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-medical-500/10 focus:border-medical-500 transition-all outline-none bg-slate-50/50 focus:bg-white text-slate-800"
+                                                placeholder="+20 1xx xxx xxxx"
+                                                value={formData.phone}
+                                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label htmlFor="appointmentDate" className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">Preferred Date</label>
+                                    <div className="relative group">
+                                        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-medical-500 transition-colors w-5 h-5" />
+                                        <input
+                                            id="appointmentDate"
+                                            name="date"
+                                            type="date"
+                                            required
+                                            min={format(new Date(), 'yyyy-MM-dd')}
+                                            className="w-full pl-12 pr-4 py-4 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-medical-500/10 focus:border-medical-500 transition-all outline-none bg-slate-50/50 focus:bg-white text-slate-800 font-medium"
+                                            value={formData.date}
+                                            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                                        />
+                                    </div>
+                                    <p className="mt-3 text-xs text-slate-400 font-medium flex items-center gap-2">
+                                        <Info className="w-3 h-3" /> Select a date to check availability and clinic hours.
+                                    </p>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full bg-medical-600 hover:bg-medical-700 text-white py-5 rounded-2xl text-xl font-bold transition-all shadow-xl shadow-medical-200 hover:scale-[1.01] active:scale-[0.99] flex justify-center items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {loading ? (
+                                        <>
+                                            <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin" />
+                                            Processing...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <CheckCircle2 className="w-6 h-6" /> Confirm My Appointment
+                                        </>
+                                    )}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    {/* Sidebar - Right Side on Desktop */}
+                    <div className="lg:col-span-12 xl:col-span-4 space-y-8 order-1 xl:order-2">
+                        {/* Live Status Card */}
+                        <div className="bg-medical-600 rounded-[2rem] p-8 text-white shadow-2xl shadow-medical-200 relative overflow-hidden group">
+                            <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl transition-transform group-hover:scale-150 duration-700" />
+
+                            <h3 className="text-xl font-bold mb-8 flex items-center gap-3 relative">
+                                <Clock className="w-6 h-6" /> Live Queue Status
+                            </h3>
+
+                            <div className="grid grid-cols-2 xl:grid-cols-1 gap-6 relative">
+                                <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20">
+                                    <span className="block text-white/60 text-xs uppercase font-bold mb-2 tracking-wider">Patients Today</span>
+                                    <div className="flex items-baseline gap-2">
+                                        <span className="text-5xl font-black">{stats.totalBooked}</span>
+                                        <span className="text-white/60 text-sm font-bold">Total</span>
+                                    </div>
+                                </div>
+                                <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20">
+                                    <span className="block text-white/60 text-xs uppercase font-bold mb-2 tracking-wider">Estimated Wait</span>
+                                    <div className="flex items-baseline gap-2">
+                                        <span className="text-5xl font-black">{stats.estimatedWait}</span>
+                                        <span className="text-white/60 text-sm font-bold">Minutes</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div className="medical-card">
-                            <h4 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
-                                <ShieldCheck className="w-5 h-5 text-medical-600" /> Clinic Info
-                            </h4>
-                            <div className="text-sm text-slate-600 space-y-2">
-                                <p className="flex justify-between">
-                                    <span className="font-medium text-slate-400 uppercase tracking-tighter text-[10px]">Today's Status</span>
-                                    <span className={settings.dailySchedules?.[format(new Date(formData.date), 'EEEE')]?.isOpen ? 'text-green-600 font-bold' : 'text-red-500 font-bold'}>
-                                        {settings.dailySchedules?.[format(new Date(formData.date), 'EEEE')]?.isOpen ? 'Open' : 'Closed'}
-                                    </span>
-                                </p>
-                                <p className="flex justify-between border-t border-slate-50 pt-2">
-                                    <span className="font-medium text-slate-400 uppercase tracking-tighter text-[10px]">Working Hours</span>
-                                    <span>
+
+                        {/* Clinic Details Card */}
+                        <div className="bg-white rounded-[2rem] shadow-xl shadow-slate-200/60 overflow-hidden border border-slate-100">
+                            <div className="p-6 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                                <h4 className="font-bold text-slate-800 flex items-center gap-2">
+                                    <ShieldCheck className="w-5 h-5 text-medical-600" /> Clinic Schedule
+                                </h4>
+                                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${settings.dailySchedules?.[format(new Date(formData.date), 'EEEE')]?.isOpen ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-500'}`}>
+                                    {settings.dailySchedules?.[format(new Date(formData.date), 'EEEE')]?.isOpen ? 'Open Now' : 'Closed'}
+                                </span>
+                            </div>
+
+                            <div className="p-6 space-y-6">
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Office Hours</span>
+                                    <span className="font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-lg">
                                         {settings.dailySchedules?.[format(new Date(formData.date), 'EEEE')]?.isOpen
                                             ? `${formatTime(settings.dailySchedules[format(new Date(formData.date), 'EEEE')].startTime)} - ${formatTime(settings.dailySchedules[format(new Date(formData.date), 'EEEE')].endTime)}`
                                             : '---'}
                                     </span>
-                                </p>
-                                <p className="flex justify-between border-t border-slate-50 pt-2">
-                                    <span className="font-medium text-slate-400 uppercase tracking-tighter text-[10px]">Daily Limit</span>
-                                    <span>Max {settings.dailyLimit} patients</span>
-                                </p>
-                                <div className="pt-4 border-t border-slate-50 space-y-3">
-                                    <div className="flex gap-3">
-                                        <MapPin className="w-4 h-4 text-medical-600 shrink-0 mt-0.5" />
-                                        <span className="text-[11px] font-bold text-slate-700 leading-tight">{settings.clinicAddress}</span>
+                                </div>
+
+                                <div className="space-y-4 pt-6 border-t border-slate-50">
+                                    <div className="flex gap-4">
+                                        <div className="bg-slate-100 p-2 rounded-xl h-fit">
+                                            <MapPin className="w-4 h-4 text-medical-600" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <span className="block text-[10px] text-slate-400 font-bold uppercase">Location</span>
+                                            <span className="text-xs font-bold text-slate-700 leading-normal block">{settings.clinicAddress}</span>
+                                        </div>
                                     </div>
-                                    <div className="flex gap-3">
-                                        <PhoneCall className="w-4 h-4 text-medical-600 shrink-0" />
-                                        <span className="text-[11px] font-bold text-slate-700">{settings.clinicPhone}</span>
+                                    <div className="flex gap-4">
+                                        <div className="bg-slate-100 p-2 rounded-xl h-fit">
+                                            <PhoneCall className="w-4 h-4 text-medical-600" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <span className="block text-[10px] text-slate-400 font-bold uppercase">Phone</span>
+                                            <span className="text-xs font-bold text-slate-700">{settings.clinicPhone}</span>
+                                        </div>
                                     </div>
                                 </div>
+
                                 {settings.mapIframeUrl && (
-                                    <div className="mt-3 rounded-lg overflow-hidden h-32 border border-slate-100 shadow-inner">
+                                    <div className="mt-6 rounded-2xl overflow-hidden h-48 border border-slate-100 shadow-inner group">
                                         <iframe
                                             src={settings.mapIframeUrl}
                                             width="100%"
@@ -259,76 +368,12 @@ const Booking = () => {
                                             allowFullScreen=""
                                             loading="lazy"
                                             referrerPolicy="no-referrer-when-downgrade"
+                                            title="Clinic Location"
+                                            className="grayscale-[0.5] group-hover:grayscale-0 transition-all duration-500"
                                         ></iframe>
                                     </div>
                                 )}
                             </div>
-                        </div>
-                    </div>
-
-                    {/* Form */}
-                    <div className="lg:col-span-2">
-                        <div className="medical-card">
-                            <form onSubmit={handleSubmit} className="space-y-6">
-                                <div>
-                                    <label htmlFor="fullName" className="block text-sm font-medium text-slate-700 mb-2">Full Name</label>
-                                    <div className="relative">
-                                        <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                                        <input
-                                            id="fullName"
-                                            name="name"
-                                            type="text"
-                                            required
-                                            className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-medical-500 focus:border-transparent transition-all outline-none"
-                                            placeholder="Enter your full name"
-                                            value={formData.name}
-                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label htmlFor="whatsappNumber" className="block text-sm font-medium text-slate-700 mb-2">WhatsApp Number</label>
-                                    <div className="relative">
-                                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                                        <input
-                                            id="whatsappNumber"
-                                            name="phone"
-                                            type="tel"
-                                            required
-                                            className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-medical-500 focus:border-transparent transition-all outline-none"
-                                            placeholder="+1 (123) 456-7890"
-                                            value={formData.phone}
-                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label htmlFor="appointmentDate" className="block text-sm font-medium text-slate-700 mb-2">Preferred Date</label>
-                                    <div className="relative">
-                                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                                        <input
-                                            id="appointmentDate"
-                                            name="date"
-                                            type="date"
-                                            required
-                                            min={format(new Date(), 'yyyy-MM-dd')}
-                                            className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-medical-500 focus:border-transparent transition-all outline-none"
-                                            value={formData.date}
-                                            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                                        />
-                                    </div>
-                                </div>
-
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="w-full btn-primary py-4 text-lg flex justify-center items-center gap-2"
-                                >
-                                    {loading ? 'Processing...' : 'Confirm Booking'}
-                                </button>
-                            </form>
                         </div>
                     </div>
                 </div>
