@@ -41,12 +41,34 @@ const Dashboard = () => {
         return () => unsubscribe();
     }, [todaysDate]);
 
-    const selectPatient = (patient) => {
+    const selectPatient = async (patient) => {
+        // Autosave current patient if notes were changed
+        if (selectedPatient && clinicalNotes !== (selectedPatient.notes || '')) {
+            await handleSaveDraft(false);
+        }
+
         setSelectedPatient(patient);
         setClinicalNotes(patient.notes || '');
         setDriveLink(patient.googleDriveLink || '');
         setNextAppointment(patient.nextAppointment || '');
         fetchHistory(patient.phone);
+    };
+
+    const handleSaveDraft = async (showNotification = true) => {
+        if (!selectedPatient) return;
+        try {
+            const docRef = doc(db, 'bookings', selectedPatient.id);
+            await updateDoc(docRef, {
+                notes: clinicalNotes,
+                googleDriveLink: driveLink,
+                nextAppointment: nextAppointment,
+                updatedAt: Timestamp.now()
+            });
+            if (showNotification) alert("Draft saved successfully.");
+        } catch (err) {
+            console.error("Save Draft Error:", err);
+            if (showNotification) alert("Save failed: " + err.message);
+        }
     };
 
     const fetchHistory = async (phone) => {
@@ -269,7 +291,7 @@ const Dashboard = () => {
 
                                 <div className="space-y-6">
                                     <div>
-                                        <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Patient Records (PDF/Images)</label>
+                                        <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Patient Records (Drive / Upload)</label>
                                         <div className="flex gap-2">
                                             <div className="relative flex-grow">
                                                 <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
@@ -277,10 +299,10 @@ const Dashboard = () => {
                                                     id="driveLink"
                                                     name="driveLink"
                                                     type="url"
-                                                    className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-medical-500 transition-all outline-none bg-slate-50"
-                                                    placeholder="File URL will appear here..."
+                                                    className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-medical-500 transition-all outline-none"
+                                                    placeholder="Drive Link or Auto-upload"
                                                     value={driveLink}
-                                                    readOnly
+                                                    onChange={(e) => setDriveLink(e.target.value)}
                                                 />
                                             </div>
                                             <label className={`cursor-pointer flex items-center justify-center px-4 rounded-xl border-2 border-dashed border-medical-200 hover:bg-medical-50 transition-all ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
@@ -293,8 +315,23 @@ const Dashboard = () => {
                                                 />
                                             </label>
                                         </div>
-                                        {isUploading && <p className="text-[10px] text-medical-600 mt-1 animate-pulse font-bold">Uploading file...</p>}
-                                        <p className="text-[10px] text-slate-400 mt-2 px-1">Upload laboratory results or patient x-rays safely to Firebase Storage.</p>
+                                        {isUploading && <p className="text-[10px] text-medical-600 mt-1 animate-pulse font-bold">Uploading to Drive...</p>}
+
+                                        {/* Embedded Preview */}
+                                        {driveLink && driveLink.includes('drive.google.com') && (
+                                            <div className="mt-4 border border-slate-200 rounded-xl overflow-hidden aspect-video bg-slate-100 relative group">
+                                                <iframe
+                                                    src={driveLink.replace('/view', '/preview').replace('?usp=sharing', '')}
+                                                    className="w-full h-full"
+                                                    title="Drive Preview"
+                                                    allow="autoplay"
+                                                ></iframe>
+                                                <div className="absolute inset-x-0 bottom-0 bg-slate-900/60 p-2 opacity-0 group-hover:opacity-100 transition-opacity flex justify-between items-center">
+                                                    <span className="text-[10px] text-white">Live Preview from Drive</span>
+                                                    <a href={driveLink} target="_blank" rel="noopener noreferrer" className="text-[10px] text-medical-200 font-bold hover:underline">Open Full Tab</a>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div>
@@ -331,19 +368,27 @@ const Dashboard = () => {
                                 </div>
                             </div>
 
-                            <div className="pt-6 border-t border-slate-200 flex justify-end gap-3">
+                            <div className="pt-6 border-t border-slate-200 flex justify-between items-center gap-3">
                                 <button
-                                    onClick={() => setSelectedPatient(null)}
-                                    className="px-6 py-2 text-slate-500 font-medium"
+                                    onClick={() => handleSaveDraft(true)}
+                                    className="px-6 py-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-all font-bold text-sm"
                                 >
-                                    Cancel
+                                    Save Draft
                                 </button>
-                                <button
-                                    onClick={handleSaveNotes}
-                                    className="btn-primary px-8"
-                                >
-                                    Save & Complete Consultation
-                                </button>
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => setSelectedPatient(null)}
+                                        className="px-6 py-2 text-slate-500 font-medium"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleSaveNotes}
+                                        className="btn-primary px-8"
+                                    >
+                                        Save & Complete Consultation
+                                    </button>
+                                </div>
                             </div>
                         </motion.div>
                     ) : (
@@ -397,14 +442,25 @@ const Dashboard = () => {
                                                 {item.notes || "No clinical notes provided."}
                                             </div>
                                             {item.googleDriveLink && (
-                                                <a
-                                                    href={item.googleDriveLink}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="inline-flex items-center gap-2 text-xs font-bold text-medical-600 hover:underline"
-                                                >
-                                                    <Eye className="w-3 h-3" /> View Attached Record
-                                                </a>
+                                                <div className="mt-3">
+                                                    <a
+                                                        href={item.googleDriveLink}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="inline-flex items-center gap-2 text-xs font-bold text-medical-600 hover:underline mb-2"
+                                                    >
+                                                        <ExternalLink className="w-3 h-3" /> Open in New Tab
+                                                    </a>
+                                                    {item.googleDriveLink.includes('drive.google.com') && (
+                                                        <div className="border border-slate-200 rounded-lg overflow-hidden aspect-video bg-white">
+                                                            <iframe
+                                                                src={item.googleDriveLink.replace('/view', '/preview').replace('?usp=sharing', '')}
+                                                                className="w-full h-full border-0"
+                                                                title="History Preview"
+                                                            ></iframe>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             )}
                                         </div>
                                     ))
