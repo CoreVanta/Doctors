@@ -35,6 +35,7 @@ const Dashboard = () => {
     const [nextAppointment, setNextAppointment] = useState('');
     const [patientHistory, setPatientHistory] = useState([]);
     const [showHistory, setShowHistory] = useState(false);
+    const [visibleRecordId, setVisibleRecordId] = useState(null); // To load iframes on demand
     const [isUploading, setIsUploading] = useState(false);
     const todaysDate = format(new Date(), 'yyyy-MM-dd');
 
@@ -202,7 +203,10 @@ const Dashboard = () => {
 
             await updateDoc(docRef, finalData);
 
-            // Update local state to reflect changes in history immediately next time
+            // Re-fetch history for the patient to ensure it's up to date
+            if (selectedPatient.phone) fetchHistory(selectedPatient.phone);
+
+            // Update local state for current bookings
             const updatedBookings = bookings.map(b =>
                 b.id === selectedPatient.id ? { ...b, ...finalData } : b
             );
@@ -488,20 +492,30 @@ const Dashboard = () => {
                                             </div>
                                             {item.googleDriveLink && (
                                                 <div className="mt-3">
-                                                    <a
-                                                        href={item.googleDriveLink}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="inline-flex items-center gap-2 text-xs font-bold text-medical-600 hover:underline mb-2"
-                                                    >
-                                                        <ExternalLink className="w-3 h-3" /> Open in New Tab
-                                                    </a>
-                                                    {item.googleDriveLink.includes('drive.google.com') && (
-                                                        <div className="border border-slate-200 rounded-lg overflow-hidden aspect-video bg-white">
+                                                    <div className="flex gap-4 mb-2">
+                                                        <a
+                                                            href={item.googleDriveLink}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="inline-flex items-center gap-2 text-xs font-bold text-medical-600 hover:underline"
+                                                        >
+                                                            <ExternalLink className="w-3 h-3" /> Open full file
+                                                        </a>
+                                                        <button
+                                                            onClick={() => setVisibleRecordId(visibleRecordId === item.id ? null : item.id)}
+                                                            className="text-xs font-bold text-slate-500 hover:text-medical-600 flex items-center gap-1"
+                                                        >
+                                                            <Eye className="w-3 h-3" /> {visibleRecordId === item.id ? 'Hide Preview' : 'Show Preview'}
+                                                        </button>
+                                                    </div>
+
+                                                    {visibleRecordId === item.id && item.googleDriveLink.includes('drive.google.com') && (
+                                                        <div className="border border-slate-200 rounded-lg overflow-hidden aspect-video bg-white shadow-inner">
                                                             <iframe
                                                                 src={formatDrivePreview(item.googleDriveLink)}
                                                                 className="w-full h-full border-0"
                                                                 title="History Preview"
+                                                                allow="autoplay"
                                                             ></iframe>
                                                         </div>
                                                     )}
