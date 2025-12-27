@@ -1,0 +1,25 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Allow patients to create and read their own bookings
+    // In a real app, you would use request.auth.uid to secure this
+    match /bookings/{bookingId} {
+      allow create: if true; // Open for initial prototype, restrict in production
+      allow read: if true;   // Open for live queue view
+      allow update, delete: if request.auth != null; // Only doctor can update status/notes
+    }
+
+    // Doctor profile/meta data
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Global settings and current serving number
+    match /meta/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}

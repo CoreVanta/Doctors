@@ -1,0 +1,38 @@
+{
+    "bookings": {
+        "BOOKING_ID_1": {
+            "name": "John Doe",
+            "phone": "+1234567890",
+            "date": "2025-12-27",
+            "queueNumber": 1,
+            "status": "completed",
+            "estimatedTime": "09:00",
+            "notes": "Patient reports mild headache. Prescribed Paracetamol.",
+            "googleDriveLink": "https://drive.google.com/...",
+            "nextAppointment": "2026-01-10",
+            "timestamp": "2025-12-27T07:00:00Z"
+        },
+        "BOOKING_ID_2": {
+            "name": "Jane Smith",
+            "phone": "+9876543210",
+            "date": "2025-12-27",
+            "queueNumber": 2,
+            "status": "calling",
+            "estimatedTime": "09:15",
+            "timestamp": "2025-12-27T07:05:00Z"
+        }
+    },
+    "users": {
+        "DOCTOR_UID": {
+            "name": "Dr. Smith",
+            "role": "doctor",
+            "specialty": "General Medicine"
+        }
+    },
+    "meta": {
+        "today": {
+            "currentQueueNumber": 1,
+            "date": "2025-12-27"
+        }
+    }
+}

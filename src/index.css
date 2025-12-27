@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-blue: #0284c7;
+  --secondary-blue: #0369a1;
+  --medical-white: #ffffff;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 font-sans;
+}
+
+.medical-card {
+  @apply bg-white rounded-xl shadow-sm border border-slate-100 p-6;
+}
+
+.btn-primary {
+  @apply bg-medical-600 hover:bg-medical-700 text-white px-4 py-2 rounded-lg transition-all duration-200 font-medium;
+}
+
+.btn-secondary {
+  @apply bg-white border border-medical-600 text-medical-600 hover:bg-medical-50 px-4 py-2 rounded-lg transition-all duration-200 font-medium;
+}
