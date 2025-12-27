@@ -95,6 +95,12 @@ const Home = () => {
                         {t('home.footer_copy')}
                     </div>
                     <div className="flex gap-6">
+                        <Link to="/privacy-policy" className="text-slate-400 hover:text-white transition-colors">
+                            {t('privacy_policy.title')}
+                        </Link>
+                        <Link to="/terms-of-use" className="text-slate-400 hover:text-white transition-colors">
+                            {t('terms_of_use.title')}
+                        </Link>
                         <Link to="/login" className="text-slate-400 hover:text-white transition-colors">{t('nav.doctor_portal')}</Link>
                     </div>
                 </div>

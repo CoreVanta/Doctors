@@ -5,6 +5,8 @@ import Booking from './pages/Booking';
 import LiveQueue from './pages/LiveQueue';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfUse from './pages/TermsOfUse';
 
 const PrivateRoute = ({ children, doctorOnly = false }) => {
   const { currentUser, isDoctor } = useAuth();
@@ -25,6 +27,8 @@ function App() {
             <Route path="/booking" element={<Booking />} />
             <Route path="/live-queue" element={<LiveQueue />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-of-use" element={<TermsOfUse />} />
             <Route
               path="/dashboard"
               element={

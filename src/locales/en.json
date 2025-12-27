@@ -158,5 +158,30 @@
         "full_name": "Full Name",
         "whatsapp_number": "WhatsApp Number",
         "preferred_date": "Preferred Date"
+    },
+    "privacy_policy": {
+        "title": "Privacy Policy",
+        "last_updated": "Last Updated: December 2025",
+        "intro": "Your privacy is important to us. This policy explains how we collect, use, and protect your personal information.",
+        "data_collection": "Data Collection",
+        "data_collection_desc": "We collect information such as your name, phone number, and medical history solely for appointment scheduling and clinical management.",
+        "data_usage": "Data Usage",
+        "data_usage_desc": "Your data is used to manage your queue position, send notifications, and provide medical staff with necessary clinical context.",
+        "data_protection": "Data Protection",
+        "data_protection_desc": "We use industry-standard encryption and secure databases (Firebase) to ensure your information remains confidential.",
+        "third_party": "Third-Party Services",
+        "third_party_desc": "We use Meta (WhatsApp) for notifications and Google Drive for secure file storage. Each service has its own privacy standards."
+    },
+    "terms_of_use": {
+        "title": "Terms of Use",
+        "last_updated": "Last Updated: December 2025",
+        "acceptance": "Acceptance of Terms",
+        "acceptance_desc": "By using this application, you agree to comply with our scheduling rules and respect clinic policies.",
+        "user_conduct": "User Conduct",
+        "user_conduct_desc": "Users must provide accurate information and arrive on time for their appointments.",
+        "cancellation": "Cancellations",
+        "cancellation_desc": "Please cancel or reschedule appointments at least 24 hours in advance if you cannot attend.",
+        "liability": "Limitation of Liability",
+        "liability_desc": "The application provides estimated times which may vary based on clinical requirements. We are not liable for delays."
     }
 }
